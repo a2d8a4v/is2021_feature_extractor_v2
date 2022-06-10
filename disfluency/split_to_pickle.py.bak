@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+
+import json
+import pickle
+import argparse
+import os
+
+
+def pickleStore( savethings , filename ):
+    dbfile = open( filename , 'wb' )
+    pickle.dump( savethings , dbfile )
+    dbfile.close()
+    return
+
+
+def pikleOpen( filename ):
+    file_to_read = open( filename , "rb" )
+    p = pickle.load( file_to_read )
+    return p
+
+
+def jsonLoad(scores_json):
+    with open(scores_json) as json_file:
+        return json.load(json_file)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input-json", type=str, required=True)
+    parser.add_argument("--output-path", type=str, required=True)
+    parser.add_argument("--output-json", type=str, required=True)
+    args = parser.parse_args()
+
+    output_path = os.path.abspath(args.output_path)
+
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+
+    save_json   = {}
+    dict_uttids = jsonLoad(args.input_json)['utts'] # ESPNets format
+
+    for utt_id, d in dict_uttids.items():
+
+        save_path = os.path.join(output_path, utt_id+'.pk')
+        s = {
+            'word_index_list': d.get('word_index_list'),
+            'vector_annotator_encoder': d.get('vector_annotator_encoder'),
+            'vector_bert_last_hidden_layer': d.get('vector_bert_last_hidden_layer'),
+            'tokens_combine_lists': d.get('tokens_combine_lists')
+        }
+
+        pickleStore(s, save_path)
+
+        save_json[utt_id] = {'save_path_pickle': save_path}
+    
+    with open(os.path.abspath(args.output_json), "w") as f:
+        json.dump({'utts': save_json}, f, indent=4)
+
+    print("Converted to pickle!")
+
+
+if __name__ == "__main__":
+    main()
