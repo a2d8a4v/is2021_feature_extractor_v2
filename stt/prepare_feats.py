@@ -223,6 +223,20 @@ for i, utt_id in enumerate(tqdm(utt_list)):
         with open(os.path.join(data_dir, tmp_apl_decoding+".list"), "a") as fn:
             fn.write("{} {}\n".format(utt_id, os.path.join(fp, utt_id+".pkl")))
 
+    # for memory issue, we reset some variables during inference
+    del phone_ctm_info
+    del ctm_info
+    del f0_info
+    del energy_info
+    del sil_feats_info
+    del word_feats_info
+    del phone_feats_info
+    del pitch_feats_info
+    del intensity_feats_info
+    del formants_info
+    del rhythm_feats_info
+
+
 # For Saving all data, import data to all_info
 if args.long_decode_mode:
     print("Decoded features Saving...")
