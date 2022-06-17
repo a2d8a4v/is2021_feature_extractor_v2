@@ -1,6 +1,7 @@
 import os
 import json
 import pickle
+import shutil
 import logging
 import subprocess
 import parselmouth
@@ -244,4 +245,28 @@ def getRight(timepoint, total_duration, formants):
             # if the ambiguous position has deviation
             position = position-1
             formant_timestamp = time_list[position].item()
+    return
+
+def splitList(listTemp, n):
+    for i in range(0, len(listTemp), n):
+        yield listTemp[i:i + n]
+
+def filter_items(data_dict, uttid_chunk):
+    rtn = {}
+    for utt_id in uttid_chunk:
+        rtn[utt_id] = data_dict[utt_id]
+    return rtn
+
+def copyfile(src, dst):
+    shutil.copyfile(
+        os.path.abspath(src),
+        os.path.abspath(dst)
+    )
+    return
+
+def movefile(src, dst):
+    shutil.move(
+        os.path.abspath(src),
+        os.path.abspath(dst)
+    )
     return
