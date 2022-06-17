@@ -35,7 +35,7 @@ def jsonLoad(scores_json):
 
 def jsonSave(save_json, file_path):
     with open(file_path, "w") as output_file:
-        json.dump(save_json, output_file, indent=4)
+        json.dump(save_json, output_file, indent=4, ensure_ascii=False)
 
 def opendict(file):
     s = {}
