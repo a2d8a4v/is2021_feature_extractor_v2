@@ -74,10 +74,6 @@ parser.add_argument("--long_decode_mode",
 
 args = parser.parse_args()
 
-print(args.split_number)
-print('test')
-assert 1 == 2
-
 lexicon = args.lexicon
 data_dir = args.data_dir
 model_name = args.model_name
