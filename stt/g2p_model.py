@@ -26,5 +26,5 @@ class G2PModel(object):
         return word2phn_dict
 
     def _write_lexicon(self, lexicon_file_path, word, phns_string):
-        with open(lexicon_file_path, 'w') as f:
+        with open(lexicon_file_path, 'a') as f:
             f.write("{} {}\n".format(word, phns_string.lower()))
