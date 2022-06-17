@@ -1,5 +1,6 @@
 import os
 import json
+import math
 import pickle
 import shutil
 import logging
@@ -247,7 +248,8 @@ def getRight(timepoint, total_duration, formants):
             formant_timestamp = time_list[position].item()
     return
 
-def splitList(listTemp, n):
+def splitList(listTemp, times):
+    n = math.ceil(len(listTemp)/times)
     for i in range(0, len(listTemp), n):
         yield listTemp[i:i + n]
 
