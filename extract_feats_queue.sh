@@ -8,7 +8,7 @@ stop_stage=10000
 test_sets="cerf_train_tr cerf_train_cv"
 model_dir="Librispeech-model-mct-tdnnf"
 model_name="librispeech"
-tag="2022601_s2t"
+tag="20220617_prompt"
 graph_affix=_tgt3
 data_root=data
 replace_text=true
@@ -18,9 +18,18 @@ long_decode_mode=true
 skip_decode=false
 text=text_prompt
 queue_split=queue_split
+s2t=false
 
 if [ ! -z ${tag} ]; then
     model_name=${model_name}_${tag}
+fi
+
+if [ ${s2t} == false ]; then
+    echo "prompt mode!"
+    if [ $stage -le 2 ]; then
+        echo "reset stage to 3, do not need to extract audio features and decode..."
+        stage=3
+    fi
 fi
 
 # cmd=queue.pl
@@ -152,8 +161,13 @@ if [ $stage -le 3 ] && [ $stop_stage -ge 3 ] ; then
             nspk=$max_nj;
         fi
         
-        dest_dir=$data_root/$test_set/$model_name
-        data_dir=$dest_dir
+        if [ ${s2t} == true ]; then
+            dest_dir=$data_root/$test_set/$model_name
+            data_dir=$dest_dir
+        else
+            dest_dir=$data_root/$test_set
+            data_dir=$dest_dir
+        fi
         ivectors_data_dir=$ivec_dir/ivectors_${test_set}
         decode_dir=${model}_online/decode_${test_set}${graph_affix}
         result_dir=${decode_dir}/gop_${model_name}
@@ -176,8 +190,13 @@ if [ $stage -le 4 ] && [ $stop_stage -ge 4 ] ; then
             nspk=$max_nj;
         fi
         
-        dest_dir=$data_root/$test_set/$model_name
-        data_dir=$dest_dir
+        if [ ${s2t} == true ]; then
+            dest_dir=$data_root/$test_set/$model_name
+            data_dir=$dest_dir
+        else
+            dest_dir=$data_root/$test_set
+            data_dir=$dest_dir
+        fi
         ivectors_data_dir=$ivec_dir/ivectors_${test_set}
         decode_dir=${model}_online/decode_${test_set}${graph_affix}
         result_dir=${decode_dir}/gop_${model_name}
