@@ -23,7 +23,8 @@ if [ ! -z ${tag} ]; then
     model_name=${model_name}_${tag}
 fi
 
-cmd=queue.pl
+# cmd=queue.pl
+cmd=run.pl
 
 echo "$0 $@"
 . parse_options.sh
@@ -259,6 +260,18 @@ if [ $stage -le 7 ] && [ $stop_stage -ge 7 ] ; then
         if [ $nspk -ge $max_nj ]; then
             nspk=$max_nj;
         fi
+
+        data_dir=$data_root/$test_set
+        dest_dir=$data_root/$test_set/$model_name
+        cat $dest_dir/error.* > $dest_dir/error
+        cat $dest_dir/text.* > $dest_dir/text
+        cat $dest_dir/ctm.* > $dest_dir/ctm
+
+        json_files = ""
+        for f in $(find "${dest_dir}" -name "all.*.json"); do
+            json_files += "$f "
+        done
+        mergejson.py --input-jsons "${json_files}" > $dest_dir/all.json
 
     done
 fi
