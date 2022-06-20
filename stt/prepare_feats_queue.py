@@ -269,7 +269,7 @@ if err_list:
 jsonSave(all_info, output_dir + "/all.{}.json".format(split_number))
 
 # write STT Result to file
-if os.file.exists(output_dir + "/text"):
+if os.path.exists(output_dir + "/text"):
     movefile(output_dir + "/text", output_dir + "/text.bak")
 with open(output_dir + "/text.{}".format(split_number), "w") as fn:    
     for utt_id in utt_list:

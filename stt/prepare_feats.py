@@ -259,7 +259,7 @@ with open(output_dir + "/all.json", "w") as fn:
     json.dump(all_info, fn, indent=4, ensure_ascii=False)
 
 # write STT Result to file
-if os.file.exists(output_dir + "/text"):
+if os.path.exists(output_dir + "/text"):
     movefile(output_dir + "/text", output_dir + "/text.bak")
 with open(output_dir + "/text", "w") as fn:    
     for utt_id in utt_list:
