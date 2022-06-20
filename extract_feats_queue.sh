@@ -20,14 +20,6 @@ text=text_prompt
 queue_split=queue_split
 s2t=false
 
-if [ ${s2t} == false ]; then
-    echo "prompt mode!"
-    if [ $stage -le 2 ]; then
-        echo "reset stage to 3, do not need to extract audio features and decode..."
-        stage=3
-    fi
-fi
-
 # cmd=queue.pl
 cmd=run.pl
 
@@ -38,6 +30,14 @@ set -euo pipefail
 
 if [ ! -z ${tag} ]; then
     model_name=${model_name}_${tag}
+fi
+
+if [ ${s2t} == false ]; then
+    echo "prompt mode!"
+    if [ $stage -lt 1 ]; then
+        echo "reset stage to 1, do not need to extract audio features and decode..."
+        stage=1
+    fi
 fi
 
 model=$model_dir/model
@@ -122,7 +122,7 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
         fi
         
         utils/copy_data_dir.sh $data_root/${test_set} $dest_dir
-        if $replace_text; then
+        if [ $replace_text == true ] && [ $s2t == true ]; then
             best_wer=${decode_dir}/scoring_kaldi/best_wer
             recog_fn=`awk '{print $NF}' $best_wer | awk -F"/" '{print $NF}' | awk -F"_" '{print "penalty_"$3"/"$2".txt"}'`
             recog_text=$decode_dir/scoring_kaldi/$recog_fn
