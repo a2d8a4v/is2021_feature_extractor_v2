@@ -15,10 +15,6 @@ long_decode_mode=true
 skip_decode=false
 text=text_prompt
 
-if [ ! -z ${tag} ]; then
-    model_name=${model_name}_${tag}
-fi
-
 . ./cmd.sh
 . ./path.sh
 
@@ -26,6 +22,10 @@ echo "$0 $@"
 . parse_options.sh
 
 set -euo pipefail
+
+if [ ! -z ${tag} ]; then
+    model_name=${model_name}_${tag}
+fi
 
 model=$model_dir/model
 ivec_extractor=$model_dir/extractor
@@ -179,7 +179,7 @@ if [ $stage -le 4 ] && [ $stop_stage -ge 4 ] ; then
         result_dir=${decode_dir}/gop_${model_name}
         json_dir=${result_dir}/json
         log_dir=${result_dir}/log
-        text_fn=$dest_dir/$text
+        text_fn=$dest_dir/text
         mkdir -p $json_dir
         
         echo "Processing GOP result of $data_dir with $model"

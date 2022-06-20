@@ -20,10 +20,6 @@ text=text_prompt
 queue_split=queue_split
 s2t=false
 
-if [ ! -z ${tag} ]; then
-    model_name=${model_name}_${tag}
-fi
-
 if [ ${s2t} == false ]; then
     echo "prompt mode!"
     if [ $stage -le 2 ]; then
@@ -39,6 +35,10 @@ echo "$0 $@"
 . parse_options.sh
 
 set -euo pipefail
+
+if [ ! -z ${tag} ]; then
+    model_name=${model_name}_${tag}
+fi
 
 model=$model_dir/model
 ivec_extractor=$model_dir/extractor
@@ -202,7 +202,7 @@ if [ $stage -le 4 ] && [ $stop_stage -ge 4 ] ; then
         result_dir=${decode_dir}/gop_${model_name}
         json_dir=${result_dir}/json
         log_dir=${result_dir}/log
-        text_fn=$dest_dir/$text
+        text_fn=$dest_dir/text
         mkdir -p $json_dir
         
         echo "Processing GOP result of $data_dir with $model"
