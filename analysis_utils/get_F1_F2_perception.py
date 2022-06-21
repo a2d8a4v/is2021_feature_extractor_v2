@@ -1,11 +1,15 @@
 import argparse
 import textgrid
 import os
+import sys
 import math
 import json
 import numpy as np
 from espnet.utils.cli_utils import strtobool
 import matplotlib as plt
+
+sys.path.insert(0, os.path.abspath('../stt')) # Remember to add this line to avoid "module no exist" error
+
 from g2p_model import G2PModel
 from utils import (
     opendict,
@@ -77,6 +81,12 @@ def make_phn_ctm(word_ctm, w2p_dict):
             start_time += duration
 
     return phone_ctm_info
+
+def process_useless_tokens_phoneme(phone_ctm):
+    rtn = []
+    for phn_token, start, end, gop_score in phone_ctm
+        rtn.append([str(phn_token.split('_')[0]), start, end, gop_score])
+    return rtn
 
 # class
 class Which(object):
@@ -183,7 +193,9 @@ for utt_id, utt_info in utt_infos.items():
     # from F1 to F5, but we only need F1 and F2
     ctm = utt_info.get('ctm')
     if phn_from_data:
-        phn_ctm = utt_info.get('phn_ctm')
+        phn_ctm = process_useless_tokens_phoneme(
+            utt_info.get('phn_ctm')
+        )
     else:
         # evenly divide the word duration
         phn_ctm = make_phn_ctm(ctm, w2p_dict)
