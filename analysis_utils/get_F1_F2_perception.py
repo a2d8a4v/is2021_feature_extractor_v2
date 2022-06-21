@@ -151,13 +151,15 @@ class Interval(object):
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('--input_json', default="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline/data/cefr_train_tr/gigaspeech_20220525_prompt/all.json", type=str)
 parser.add_argument('--input_dict', default="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline/data/local/dict/lexicon.txt", type=str)
-parser.add_argument('--phn_from_data', default=False, type=strtobool)
+parser.add_argument('--output_file_path', default="./test.pkl", type=str)
+parser.add_argument('--phn_from_data', default=True, type=strtobool)
 args = parser.parse_args()
 
 # variables
 input_json = args.input_json
 input_dict = args.input_dict
 phn_from_data = args.phn_from_data
+output_file_path = args.output_file_path
 
 vowel_formant_dict = {}
 
@@ -230,7 +232,7 @@ for utt_id, utt_info in utt_infos.items():
             vowel_formant_dict.setdefault(vowel, []).append([formant_mean_f1, formant_mean_f2])
 
 # save vowel_formant_dict
-pickleStore(vowel_formant_dict, "/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline/vowel_formant_dict.pkl")
+pickleStore(vowel_formant_dict, output_file_path)
 
 # draw a plot: vowel perception
 
