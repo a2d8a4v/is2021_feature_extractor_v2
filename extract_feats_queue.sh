@@ -19,6 +19,8 @@ long_decode_mode=true
 skip_decode=false
 text=text_prompt
 queue_split=queue_split
+dumpdir=dump
+savejson=data.new.json
 s2t=false
 
 # cmd=queue.pl
@@ -132,6 +134,7 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
         fi
 
         if [ $s2t == false ]; then
+            echo "replace the text in ${dest_dir}"
             python local.apl.v3/stt/in_place_oov_tokens.py --input_text_file $data_root/${test_set}/text \
                                                            --output_text_file $dest_dir/text \
                                                            --words_file $lang/words.txt
@@ -289,6 +292,16 @@ if [ $stage -le 7 ] && [ $stop_stage -ge 7 ] ; then
         done
         mergejson.py --input-jsons "${json_files}" > $dest_dir/all.json
 
+    done
+fi
+
+if [ $stage -le 8 ] && [ $stop_stage -ge 8 ] ; then
+    for test_set in $test_sets; do
+        json=$dumpdir/$data_set/deltafalse/data.json
+        appd=$data_root/$test_set/$model_name/all.json
+        # @https://espnet.github.io/espnet/apis/utils_py.html#addjson-py
+        addjson.py --verbose ${verbose} -i true \
+            ${json} ${appd} > $data_root/$test_set/deltafalse/${savejson}
     done
 fi
 
