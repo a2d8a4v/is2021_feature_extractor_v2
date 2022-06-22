@@ -51,6 +51,9 @@ oov=`cat $lang/oov.int` || exit 1;
 mkdir -p $dir/log
 echo $nj > $dir/num_jobs
 sdata=$data/split${nj}
+if [ -f $sdata ]; then
+  mv $sdata ${sdata}.bak
+fi
 [[ -d $sdata && $data/feats.scp -ot $sdata ]] || \
    split_data.sh $data $nj || exit 1;
 
