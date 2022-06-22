@@ -8,7 +8,7 @@ import numpy as np
 from espnet.utils.cli_utils import strtobool
 import matplotlib as plt
 
-sys.path.insert(0, os.path.abspath('../stt')) # Remember to add this line to avoid "module no exist" error
+sys.path.insert(0,os.path.abspath(os.path.join(os.getcwd(), "local.apl.v3/stt"))) # Remember to add this line to avoid "module no exist" error
 
 from g2p_model import G2PModel
 from utils import (
@@ -84,7 +84,7 @@ def make_phn_ctm(word_ctm, w2p_dict):
 
 def process_useless_tokens_phoneme(phone_ctm):
     rtn = []
-    for phn_token, start, end, gop_score in phone_ctm
+    for phn_token, start, end, gop_score in phone_ctm:
         rtn.append([str(phn_token.split('_')[0]), start, end, gop_score])
     return rtn
 
@@ -157,97 +157,111 @@ class Interval(object):
     def get_type(self):
         return self.type
 
-# parsers
-parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('--input_json', default="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline/data/cefr_train_tr/gigaspeech_20220525_prompt/all.json", type=str)
-parser.add_argument('--input_dict', default="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline/data/local/dict/lexicon.txt", type=str)
-parser.add_argument('--output_file_path', default="./test.pkl", type=str)
-parser.add_argument('--phn_from_data', default=True, type=strtobool)
-args = parser.parse_args()
+if __name__ == '__main__':
 
-# variables
-input_json = args.input_json
-input_dict = args.input_dict
-phn_from_data = args.phn_from_data
-output_file_path = args.output_file_path
+    # parsers
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('--action',
+                        default='collect_feats',
+                        const='collect_feats',
+                        nargs='?',
+                        choices=['collect_feats', 'plot_perception'])
+    parser.add_argument('--input_json', default="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline/data/cefr_train_tr/gigaspeech_20220525_prompt/all.json", type=str)
+    parser.add_argument('--input_dict', default="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline/data/local/dict/lexicon.txt", type=str)
+    parser.add_argument('--lexicon_file_path', default="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline/data/local/dict/lexicon.txt", type=str)
+    parser.add_argument('--output_file_path', default="./test.pkl", type=str)
+    parser.add_argument('--phn_from_data', default=True, type=strtobool)
+    args = parser.parse_args()
 
-vowel_formant_dict = {}
+    if args.action == 'collect_feats':
 
-# initialize model
-g2p_model = G2PModel()
-_w = Which()
+        # variables
+        vowel_formant_dict = {}
+        input_json = args.input_json
+        input_dict = args.input_dict
+        phn_from_data = args.phn_from_data
+        output_file_path = args.output_file_path
+        lexicon_file_path = args.lexicon_file_path
 
-# initialize w2p dictionary
-w2p_dict = opendict(input_dict)
+        # initialize model
+        g2p_model = G2PModel(lexicon_file_path)
+        _w = Which()
 
-# read file
-utt_infos = jsonLoad(input_json)['utts']
+        # initialize w2p dictionary
+        w2p_dict = opendict(input_dict)
 
-# get F1 and F2 in each utterance
-for utt_id, utt_info in utt_infos.items():
+        # read file
+        utt_infos = jsonLoad(input_json)['utts']
 
-    # text and word2phone dictionary
-    text = utt_info.get('stt')
-    w2p_dict = g2p_model.g2p(text, w2p_dict)
+        # get F1 and F2 in each utterance
+        for utt_id, utt_info in utt_infos.items():
 
-    # from F1 to F5, but we only need F1 and F2
-    ctm = utt_info.get('ctm')
-    if phn_from_data:
-        phn_ctm = process_useless_tokens_phoneme(
-            utt_info.get('phn_ctm')
-        )
-    else:
-        # evenly divide the word duration
-        phn_ctm = make_phn_ctm(ctm, w2p_dict)
-    total_duration = utt_info.get('feats').get('total_duration')
-    formants = np.array(utt_info.get('feats').get('formant'))
+            # text and word2phone dictionary
+            text = utt_info.get('stt')
+            w2p_dict = g2p_model.g2p(text, w2p_dict)
 
-    nLabel = []
-    # first, we need to get vowels from phoneme-level ctm
-    for phn_id, start, duration, conf in phn_ctm:
-        
-        # skip silent tokens
-        if phn_id.lower() in ['sil','@sil']:
-            continue
+            # from F1 to F5, but we only need F1 and F2
+            ctm = utt_info.get('ctm')
+            if phn_from_data:
+                phn_ctm = process_useless_tokens_phoneme(
+                    utt_info.get('phn_ctm')
+                )
+            else:
+                # evenly divide the word duration
+                phn_ctm = make_phn_ctm(ctm, w2p_dict)
+            total_duration = utt_info.get('feats').get('total_duration')
+            formants = np.array(utt_info.get('feats').get('formant'))
 
-        # duaration
-        end = start + duration
+            nLabel = []
+            # first, we need to get vowels from phoneme-level ctm
+            for phn_id, start, duration, conf in phn_ctm:
+                
+                # skip silent tokens
+                if phn_id.lower() in ['sil','@sil']:
+                    continue
 
-        # is consonant or vowel
-        _n = Interval()
-        _n.set_start(start)
-        _n.set_end(end)
-        _n.set_label(phn_id)
-        _n.set_type(_w._is(phn_id))
-        nLabel.append(_n)
+                # duaration
+                end = start + duration
 
-    vowel_dict = {}
-    # second, make a dict to count each vowel
-    for i in nLabel:
-        if i.get_type() == _w.get_v():
-            vowel_dict.setdefault(i.get_label(), []).append([i.get_start(), i.get_end()])
-    
-    # get formant array for each vowel and record that
-    for vowel, vowel_info in vowel_dict.items():
-        for start, end in vowel_info:
-            # TODO: fix the interval issue
-            _interval = [
-                getLeft(start, total_duration, formants),
-                getRight(end, total_duration, formants)
-            ]
+                # is consonant or vowel
+                _n = Interval()
+                _n.set_start(start)
+                _n.set_end(end)
+                _n.set_label(phn_id)
+                _n.set_type(_w._is(phn_id))
+                nLabel.append(_n)
+
+            vowel_dict = {}
+            # second, make a dict to count each vowel
+            for i in nLabel:
+                if i.get_type() == _w.get_v():
+                    vowel_dict.setdefault(i.get_label(), []).append([i.get_start(), i.get_end()])
             
-            formant_array = formants[_interval]
-            formant_array_f1 = formant_array[:,1]
-            formant_array_f2 = formant_array[:,2]
-            formant_mean_f1  = np.mean(formant_array_f1).item()
-            formant_mean_f2  = np.mean(formant_array_f2).item()
-            vowel_formant_dict.setdefault(vowel, []).append([formant_mean_f1, formant_mean_f2])
+            # get formant array for each vowel and record that
+            for vowel, vowel_info in vowel_dict.items():
+                for start, end in vowel_info:
+                    # TODO: fix the interval issue
+                    _interval = [
+                        getLeft(start, total_duration, formants),
+                        getRight(end, total_duration, formants)
+                    ]
+                    
+                    formant_array = formants[_interval]
+                    formant_array_f1 = formant_array[:,1]
+                    formant_array_f2 = formant_array[:,2]
+                    formant_mean_f1  = np.mean(formant_array_f1).item()
+                    formant_mean_f2  = np.mean(formant_array_f2).item()
+                    vowel_formant_dict.setdefault(vowel, []).append([formant_mean_f1, formant_mean_f2])
 
-# save vowel_formant_dict
-pickleStore(vowel_formant_dict, output_file_path)
+        # save vowel_formant_dict
+        pickleStore(vowel_formant_dict, output_file_path)
 
-# draw a plot: vowel perception
+    if args.action == 'plot_perception':
 
-# compute the radius of circle
+        # variables
+        input_json = args.input_json
+        vowel_formant_dict = pikleOpen(input_json)
 
+        # draw a plot: vowel perception
 
+        # compute the radius of circle
