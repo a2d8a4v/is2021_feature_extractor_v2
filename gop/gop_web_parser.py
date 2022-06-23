@@ -60,6 +60,8 @@ class GOP(object):
         j = 0
         for i in range(len(prompt_list)):
             word = prompt_list[i]
+            if word.upper() == '<UNK>':
+                continue
             phone_list = []
             stress_list = []
             sound_list = []

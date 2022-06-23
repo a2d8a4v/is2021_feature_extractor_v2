@@ -70,7 +70,7 @@ with open(text_fn, "r") as fn:
         text_dict[utt_id] = content
 
 oov_vocab = set(oov_vocab)
-print(oov_vocab)
+print('Your OOVs vocab: {}'.format(oov_vocab))
 
 with open(args.conf) as f:
     conf = yaml.safe_load(f)
@@ -95,12 +95,12 @@ for log_path in tqdm(fns):
                 # process GOP
                 final_msg = gop_msg.split("<GOP>")[1]
                 gop_parser.set_prompt(prompt)
+
                 try:
                     gop_word_dict = gop_parser.process_GOP(final_msg)
+                    gop_dict[utt_id] = gop_word_dict
                 except:
                     print(utt_id, prompt)
-                    
-                gop_dict[utt_id] = gop_word_dict
 
 with open(args.json_dir + "/gop_scores.json", "w") as fn:
     json.dump(gop_dict, fn, indent=4)

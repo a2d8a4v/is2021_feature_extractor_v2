@@ -57,17 +57,17 @@ def get_stats(numeric_list, prefix=""):
     
 class SpeechModel(object):
     def __init__(self, recog_dict, gop_result_dir, gop_json_fn):
-        # STT
-        self.recog_dict = recog_dict
-        self.gop_word_ctm_info, self.gop_phone_ctm_info = self.get_gop_ctm(gop_result_dir, gop_json_fn)
         # Fluency
         self.sil_seconds = 0.145
         self.long_sil_seconds = 0.495
-        self.ignored_words = ["@sil", "sil"]
+        self.ignored_words = ["@sil", "sil", 'spn']
         self.disfluency_phrases = ['you know', 'i mean', 'well', 'like']
         self.disflunecy_words = ["AH", "UM", "UH", "EM", "OH", "ER", "ERR"]
         self.disflunecy_words_ets_baseline = ["UM", "UH"]
         self.special_words = ["<UNK>"]
+        # STT
+        self.recog_dict = recog_dict
+        self.gop_word_ctm_info, self.gop_phone_ctm_info = self.get_gop_ctm(gop_result_dir, gop_json_fn)
     
     # STT features
     def recog(self, uttid):
@@ -130,8 +130,18 @@ class SpeechModel(object):
             prev_uttid = None
             for line in wctm_fn.readlines():
                 uttid, _, start_time, duration, word_id = line.split()
+
+                # ISSUE: we seperate input to queue jobs, utts have already been seperated to different files 
+                if uttid not in words_gop_json_dict:
+                    continue
+
+                # we do not calculate gop for unk tokens
+                if word_id in self.special_words:
+                    continue
+
                 if prev_uttid != uttid:
                     count = 0
+
                 # NOTE: we use the average value of phoneme-level gop score as the word-level gop score
                 word_gop_id, word_gop = words_gop_json_dict[uttid][count]
                 
@@ -165,14 +175,22 @@ class SpeechModel(object):
             for line in pctm_fn.readlines():
 
                 uttid, _, start_time, duration, phn_id = line.split()
+                
+                # ISSUE: we seperate input to queue jobs, utts have already been seperated to different files 
+                if uttid not in phns_gop_json_dict:
+                    continue
+
                 if prev_uttid != uttid:
                     count = 0
                 
-                # BUG: the alignment result has 'SIL' tokens, just ignore it
-                if phn_id.lower() == 'sil':
+                # BUG: the alignment result has 'SIL' or 'SPN' tokens, just ignore it
+                if phn_id.lower().split('_')[0] in self.ignored_words:
                     continue
 
-                phn_gop_id, phn_gop = phns_gop_json_dict[uttid][count]
+                try:
+                    phn_gop_id, phn_gop = phns_gop_json_dict[uttid][count]
+                except:
+                    assert 1==2, phns_gop_json_dict[uttid]
                 
                 assert phn_id == phn_gop_id
                 

@@ -80,7 +80,7 @@ with open(text_file_path, "r") as fn:
 with open(utt2dur_file_path, "r") as fn:
     for line in fn.readlines():
         info = line.split()
-        utt2dur_dict[info[0]] = str(info[1:])
+        utt2dur_dict[info[0]] = str(info[1])
 
 # gop
 gop_dict = jsonLoad(gop_json_file_path)
