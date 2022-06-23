@@ -71,7 +71,6 @@ if [ $stage -le 1 ] && [ ${stop_stage} -ge 1 ]; then
 
 
         python local.apl.v3/analysis/get_vowel_perception.py \
-            --action collect_feats \
             --input_file $data_dir/tmp_apl_decoding_${tag}.list \
             --lexicon_file_path $output_dir/lexicon \
             --output_file_path $output_dir/analysis_perception_output.pkl \
