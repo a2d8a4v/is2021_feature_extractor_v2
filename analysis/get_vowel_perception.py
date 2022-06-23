@@ -8,18 +8,18 @@ import numpy as np
 from espnet.utils.cli_utils import strtobool
 import matplotlib as plt
 
-sys.path.insert(0,os.path.abspath(os.path.join(os.getcwd(), "local.apl.v3/stt"))) # Remember to add this line to avoid "module no exist" error
+sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), "local.apl.v3/utils"))) # Remember to add this line to avoid "module no exist" error
+sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), "local.apl.v3/stt")))
 
 from g2p_model import G2PModel
-from utils import (
+from utilities import (
     opendict,
+    openlist,
+    open_utt2pkl,
     pickleStore
 )
 
 # functions
-def jsonLoad(scores_json):
-    with open(scores_json) as json_file:
-        return json.load(json_file)
 
 def getLeft(timepoint, total_duration, formants):
     percent = timepoint / total_duration
@@ -166,7 +166,7 @@ if __name__ == '__main__':
                         const='collect_feats',
                         nargs='?',
                         choices=['collect_feats', 'plot_perception'])
-    parser.add_argument('--input_json', default="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline/data/cefr_train_tr/gigaspeech_20220525_prompt/all.json", type=str)
+    parser.add_argument('--input_file', default="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline/data/cefr_train_tr/gigaspeech_20220525_prompt/all.json", type=str)
     parser.add_argument('--input_dict', default="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline/data/local/dict/lexicon.txt", type=str)
     parser.add_argument('--lexicon_file_path', default="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline/data/local/dict/lexicon.txt", type=str)
     parser.add_argument('--output_file_path', default="./test.pkl", type=str)
@@ -177,11 +177,14 @@ if __name__ == '__main__':
 
         # variables
         vowel_formant_dict = {}
-        input_json = args.input_json
+        input_file = args.input_file
         input_dict = args.input_dict
         phn_from_data = args.phn_from_data
         output_file_path = args.output_file_path
         lexicon_file_path = args.lexicon_file_path
+
+        # read file
+        utt_infos = open_utt2pkl(input_file)
 
         # initialize model
         g2p_model = G2PModel(lexicon_file_path)
@@ -189,9 +192,6 @@ if __name__ == '__main__':
 
         # initialize w2p dictionary
         w2p_dict = opendict(input_dict)
-
-        # read file
-        utt_infos = jsonLoad(input_json)['utts']
 
         # get F1 and F2 in each utterance
         for utt_id, utt_info in utt_infos.items():
@@ -204,7 +204,7 @@ if __name__ == '__main__':
             ctm = utt_info.get('ctm')
             if phn_from_data:
                 phn_ctm = process_useless_tokens_phoneme(
-                    utt_info.get('phn_ctm')
+                    utt_info.get('phone_ctm')
                 )
             else:
                 # evenly divide the word duration
@@ -259,8 +259,8 @@ if __name__ == '__main__':
     if args.action == 'plot_perception':
 
         # variables
-        input_json = args.input_json
-        vowel_formant_dict = pikleOpen(input_json)
+        input_file = args.input_file
+        vowel_formant_dict = pikleOpen(input_file)
 
         # draw a plot: vowel perception
 
