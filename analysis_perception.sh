@@ -69,7 +69,6 @@ if [ $stage -le 1 ] && [ ${stop_stage} -ge 1 ]; then
         #         --output_file_path $output_dir/analysis_perception_output.JOB.pkl \
         #         --phn_from_data true
 
-
         python local.apl.v3/analysis/get_vowel_perception.py \
             --input_file $data_dir/tmp_apl_decoding_${tag}.list \
             --lexicon_file_path $output_dir/lexicon \
@@ -117,7 +116,7 @@ if [ $stage -le 3 ] && [ ${stop_stage} -ge 3 ]; then
         dest_dir=$data_dir/$model_name
         output_dir=$data_dir/$model_name/analysis
 
-        python local.apl.v3/utils/get_vowel_perception.py \
+        python local.apl.v3/utils/draw_ellipse.py \
                 --input_file_path $output_dir/all.pkl \
                 --output_dir_path $output_dir
     done
