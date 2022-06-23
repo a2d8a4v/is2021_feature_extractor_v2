@@ -101,7 +101,8 @@ class AudioModel(object):
     def get_pitch(self, speech, ctm_info, f0_list, total_duration, formants_info=None, frame_length=200, win_length=100):
         pitch_list = []
 
-        if formants_info is not None:
+        # NOTICE: this part is a big bottle-neck on time complexity, it is better to use formant info with timestamp info inside
+        if formants_info is None:
 
             for word, start_time, duration, conf in ctm_info:
                 start_time = math.ceil(start_time*self.sample_rate)
@@ -127,9 +128,10 @@ class AudioModel(object):
         return pitch_list
         
     def get_intensity(self, speech, ctm_info, energy_list, total_duration, formants_info=None, frame_length=200):
-        energy_list = []
+        intensity_list = []
 
-        if formants_info is not None:
+        # NOTICE: this part is a big bottle-neck on time complexity, it is better to use formant info with timestamp info inside
+        if formants_info is None:
 
             for word, start_time, duration, conf in ctm_info:
                 start_time = math.ceil(start_time*self.sample_rate)
@@ -137,7 +139,7 @@ class AudioModel(object):
                 _speech = speech[start_time:end_time]
                 word_rms_list, _ = self.get_energy(_speech, frame_length=frame_length)
                 del _
-                energy_list.append(sum(word_rms_list)/len(word_rms_list))
+                intensity_list.append(sum(word_rms_list)/len(word_rms_list))
 
         else:
 
@@ -150,9 +152,9 @@ class AudioModel(object):
                     getRight(end_time, total_duration, formants_info)
                 ]
                 word_energy_list = np.array(energy_list)[interval]
-                energy_list.append(np.float64(np.mean(word_energy_list)))
+                intensity_list.append(np.float64(np.mean(word_energy_list)))
 
-        return energy_list
+        return intensity_list
 
     def __make_script(self):
         # _script_loc = tempfile.mktemp(suffix='.praat')
