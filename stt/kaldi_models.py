@@ -60,7 +60,7 @@ class SpeechModel(object):
         # Fluency
         self.sil_seconds = 0.145
         self.long_sil_seconds = 0.495
-        self.ignored_words = ["@sil", "sil", 'spn']
+        self.ignored_phonemes = ["@sil", "sil", 'spn']
         self.disfluency_phrases = ['you know', 'i mean', 'well', 'like']
         self.disflunecy_words = ["AH", "UM", "UH", "EM", "OH", "ER", "ERR"]
         self.disflunecy_words_ets_baseline = ["UM", "UH"]
@@ -184,7 +184,7 @@ class SpeechModel(object):
                     count = 0
                 
                 # BUG: the alignment result has 'SIL' or 'SPN' tokens, just ignore it
-                if phn_id.lower().split('_')[0] in self.ignored_words:
+                if phn_id.lower().split('_')[0] in self.ignored_phonemes:
                     continue
 
                 try:
