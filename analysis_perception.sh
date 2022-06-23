@@ -118,8 +118,8 @@ if [ $stage -le 3 ] && [ ${stop_stage} -ge 3 ]; then
         dest_dir=$data_dir/$model_name
         output_dir=$data_dir/$model_name/analysis
 
-        python local.apl.v3/analysis/get_vowel_perception.py \
-                --action plot_perception \
-                --input_json $output_dir/all.pkl
+        python local.apl.v3/utils/get_vowel_perception.py \
+                --input_file_path $output_dir/all.pkl \
+                --output_dir_path $output_dir
     done
 fi
