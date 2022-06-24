@@ -218,15 +218,15 @@ def getLeft(timepoint, total_duration, formants):
         if (formant_timestamp == timepoint) or (formant_timestamp <= timepoint and round(time_list[position+1].item(), 4) >= timepoint):
             return position
         elif formant_timestamp > timepoint:
-            position = position-1
             if position == 0:
                 return position
+            position = position-1
             formant_timestamp = round(time_list[position].item(), 4)
         elif formant_timestamp < timepoint and round(time_list[position+1].item(), 4) < timepoint:
             # if the ambiguous position has deviation
-            position = position+1
             if position == time_list.shape[0]-1:
                 return position
+            position = position+1
             formant_timestamp = round(time_list[position].item(), 4)
     return
 
@@ -246,15 +246,15 @@ def getRight(timepoint, total_duration, formants):
         if (formant_timestamp == timepoint) or (formant_timestamp <= timepoint and round(time_list[position+1].item(), 4) >= timepoint):
             return position
         elif formant_timestamp < timepoint:
-            position = position+1
             if position == time_list.shape[0]-1:
                 return position
+            position = position+1
             formant_timestamp = round(time_list[position].item(), 4)
         elif formant_timestamp > timepoint and round(time_list[position+1].item(), 4) > timepoint:
             # if the ambiguous position has deviation
-            position = position-1
             if position == 0:
                 return position
+            position = position-1
             formant_timestamp = round(time_list[position].item(), 4)
     return
 
