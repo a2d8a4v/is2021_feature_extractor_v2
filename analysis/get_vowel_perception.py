@@ -1,9 +1,11 @@
 import argparse
 import textgrid
+import re
 import os
 import sys
 import math
 import json
+from tqdm import tqdm
 import numpy as np
 from espnet.utils.cli_utils import strtobool
 import matplotlib as plt
@@ -16,57 +18,16 @@ from utilities import (
     opendict,
     openlist,
     open_utt2pkl,
-    pickleStore
+    pickleStore,
+    getLeft,
+    getRight
+)
+from objects import (
+    Which,
+    Interval
 )
 
 # functions
-
-def getLeft(timepoint, total_duration, formants):
-    percent = timepoint / total_duration
-    len_formant = formants.shape[0]
-    time_list = formants[:,0]
-
-    # get the ambiguous frame position
-    position = math.ceil(len_formant*percent)
-
-    # check the timestamp of formant is bigger than timepoint
-    # we hypothesis two continuous timestamp should have similar frequency
-    formant_timestamp = time_list[position].item()
-    while True:
-        if (formant_timestamp == timepoint) or (formant_timestamp < timepoint and time_list[position+1].item() > timepoint):
-            return position
-        elif formant_timestamp > timepoint:
-            position = position-1
-            formant_timestamp = time_list[position].item()
-        elif formant_timestamp < timepoint and time_list[position+1].item() < timepoint:
-            # if the ambiguous position has deviation
-            position = position+1
-            formant_timestamp = time_list[position].item()
-    return
-
-def getRight(timepoint, total_duration, formants):
-    percent = timepoint / total_duration
-    len_formant = formants.shape[0]
-    time_list = formants[:,0]
-
-    # get the ambiguous frame position
-    position = math.floor(len_formant*percent)
-
-    # check the timestamp of formant is bigger than timepoint
-    # we hypothesis two continuous timestamp should have similar frequency
-    formant_timestamp = time_list[position].item()
-    while True:
-        if (formant_timestamp == timepoint) or (formant_timestamp < timepoint and time_list[position+1].item() > timepoint):
-            return position
-        elif formant_timestamp < timepoint:
-            position = position+1
-            formant_timestamp = time_list[position].item()
-        elif formant_timestamp > timepoint and time_list[position+1].item() > timepoint:
-            # if the ambiguous position has deviation
-            position = position-1
-            formant_timestamp = time_list[position].item()
-    return
-
 def make_phn_ctm(word_ctm, w2p_dict):
 
     phone_ctm_info = []
@@ -87,75 +48,6 @@ def process_useless_tokens_phoneme(phone_ctm):
     for phn_token, start, end, gop_score in phone_ctm:
         rtn.append([str(phn_token.split('_')[0]), start, end, gop_score])
     return rtn
-
-# class
-class Which(object):
-
-    # @https://hackage.haskell.org/package/hsc3-lang-0.15/docs/src/Sound-SC3-Lang-Data-CMUdict.html
-    def __init__(self):
-        self.consonants = ['l', 'zh', 's', 'z', 'ng', 'g', 'k', 'th', 'd', 'dh', 'w', 'p', 'n', 't', 'r', 'sh', 'ch', 'hh', 'b', 'jh', 'f', 'm', 'v']
-        self.vowels = ['ah', 'aa', 'ih', 'aw', 'w', 'axr', 'ow', 'ao', 'y', 'eh', 'ay', 'uh', 'q', 'ey', 'ae', 'iy', 'oy', 'uw', 'ax', 'er']
-        self.consonant = "C"
-        self.vowel = "V"
-        self.other = "O"
-
-    def _is(self, ph):
-        ph = ph.lower()
-        if ph in self.vowels:
-            return self.vowel
-        elif ph in self.consonants:
-            return self.consonant
-        else:
-            return self.other
-
-    def get_v(self):
-        return self.vowel
-
-    def get_c(self):
-        return self.consonant
-
-    def get_o(self):
-        return self.other
-
-class Interval(object):
-
-    def __init__(self):
-        self.start = None
-        self.end = None
-        self.duration = None
-        self.label = None
-        self.type = None
-    
-    def set_start(self, s):
-        self.start = s
-        if self.end is not None:
-            self.duration = self.end - self.start
-
-    def set_end(self, e):
-        self.end = e
-        if self.start is not None:
-            self.duration = self.end - self.start
-
-    def set_label(self, l):
-        self.label = l
-
-    def set_type(self, t):
-        self.type = t
-
-    def get_start(self):
-        return self.start
-
-    def get_end(self):
-        return self.end
-
-    def get_label(self):
-        return self.label
-
-    def get_dur(self):
-        return self.duration
-
-    def get_type(self):
-        return self.type
 
 if __name__ == '__main__':
 
@@ -187,7 +79,7 @@ if __name__ == '__main__':
     w2p_dict = opendict(input_dict)
 
     # get F1 and F2 in each utterance
-    for utt_id, utt_info in utt_infos.items():
+    for utt_id, utt_info in tqdm(utt_infos.items()):
 
         # text and word2phone dictionary
         text = utt_info.get('stt')
@@ -209,8 +101,10 @@ if __name__ == '__main__':
         # first, we need to get vowels from phoneme-level ctm
         for phn_id, start, duration, conf in phn_ctm:
             
+            phn_id = re.sub("\d+", '', phn_id.split('_')[0])
+
             # skip silent tokens
-            if phn_id.lower() in ['sil','@sil']:
+            if phn_id.lower() in ['sil','@sil','spn']:
                 continue
 
             # duaration

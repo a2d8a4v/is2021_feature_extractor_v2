@@ -15,10 +15,6 @@ from parselmouth.praat import run_file
 # )
 # from textgrid import *
 
-
-class Error(Exception):
-    pass
-
 def pickleStore(savethings , filename):
     dbfile = open( filename , 'wb' )
     pickle.dump( savethings , dbfile )
@@ -203,6 +199,7 @@ def ctm2textgrid(word_ctm, phone_ctm, save_file_dir, utt2dur_file_path, utt_id):
     return ctm_to_textgrid(word_ctm, phone_ctm, save_file_dir, utt2dur_file_path, utt_id)
 
 def getLeft(timepoint, total_duration, formants):
+    timepoint = round(timepoint, 4)
     percent = timepoint / total_duration
     len_formant = formants.shape[0]
     time_list = formants[:,0]
@@ -212,20 +209,25 @@ def getLeft(timepoint, total_duration, formants):
 
     # check the timestamp of formant is bigger than timepoint
     # we hypothesis two continuous timestamp should have similar frequency
-    formant_timestamp = time_list[position].item()
+    formant_timestamp = round(time_list[position].item(), 4)
     while True:
-        if (formant_timestamp == timepoint) or (formant_timestamp < timepoint and time_list[position+1].item() > timepoint):
+        if (formant_timestamp == timepoint) or (formant_timestamp <= timepoint and round(time_list[position+1].item(), 4) >= timepoint):
             return position
         elif formant_timestamp > timepoint:
             position = position-1
-            formant_timestamp = time_list[position].item()
-        elif formant_timestamp < timepoint and time_list[position+1].item() < timepoint:
+            if position == 0:
+                return position
+            formant_timestamp = round(time_list[position].item(), 4)
+        elif formant_timestamp < timepoint and round(time_list[position+1].item(), 4) < timepoint:
             # if the ambiguous position has deviation
             position = position+1
-            formant_timestamp = time_list[position].item()
+            if position == time_list.shape[0]-1:
+                return position
+            formant_timestamp = round(time_list[position].item(), 4)
     return
 
 def getRight(timepoint, total_duration, formants):
+    timepoint = round(timepoint, 4)
     percent = timepoint / total_duration
     len_formant = formants.shape[0]
     time_list = formants[:,0]
@@ -235,17 +237,21 @@ def getRight(timepoint, total_duration, formants):
 
     # check the timestamp of formant is bigger than timepoint
     # we hypothesis two continuous timestamp should have similar frequency
-    formant_timestamp = time_list[position].item()
+    formant_timestamp = round(time_list[position].item(), 4)
     while True:
-        if (formant_timestamp == timepoint) or (formant_timestamp < timepoint and time_list[position+1].item() > timepoint):
+        if (formant_timestamp == timepoint) or (formant_timestamp <= timepoint and round(time_list[position+1].item(), 4) >= timepoint):
             return position
         elif formant_timestamp < timepoint:
             position = position+1
-            formant_timestamp = time_list[position].item()
-        elif formant_timestamp > timepoint and time_list[position+1].item() > timepoint:
+            if position == time_list.shape[0]-1:
+                return position
+            formant_timestamp = round(time_list[position].item(), 4)
+        elif formant_timestamp > timepoint and round(time_list[position+1].item(), 4) > timepoint:
             # if the ambiguous position has deviation
             position = position-1
-            formant_timestamp = time_list[position].item()
+            if position == 0:
+                return position
+            formant_timestamp = round(time_list[position].item(), 4)
     return
 
 def splitList(listTemp, times):

@@ -14,11 +14,12 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--input_json_files",
-                        default="data/train/all.json",
+    parser.add_argument('--input_json_files',
+                        nargs='+',
+                        help='<Required> Set flag',
                         type=str)
 
-    parser.add_argument("--output_file_path",
+    parser.add_argument('--output_file_path',
                         default="data/train/all.json",
                         type=str)
 
@@ -32,7 +33,7 @@ if __name__ == '__main__':
     for pkl_file_path in input_json_files:
         data_dict = pikleOpen(pkl_file_path)
         for vowel, vowel_info in data_dict.items():
-            save_json.setdefault(save_json, []).extend(vowel_info)
+            save_json.setdefault(vowel, []).extend(vowel_info)
 
     pickleStore(save_json, output_file_path)
 

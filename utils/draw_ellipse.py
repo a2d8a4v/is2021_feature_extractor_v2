@@ -82,8 +82,9 @@ if __name__ == '__main__':
 
     # compute the radius of circle and save plot image for each vowel
     for vowel, f1_f2_info in vowel_formant_dict.items():
+        f1_f2_info = np.array(f1_f2_info)
         params, ell = fitEllipse(f1_f2_info, 2)
-        plotConts(
+        plotSaveConts(
             [f1_f2_info, ell],
             vowel,
             output_dir_path
@@ -91,7 +92,7 @@ if __name__ == '__main__':
         collect.append(ell)
 
     # save plot image for all
-    plotConts(
+    plotSaveConts(
         collect,
         '_vowels',
         output_dir_path

@@ -60,20 +60,13 @@ if [ $stage -le 1 ] && [ ${stop_stage} -ge 1 ]; then
         output_dir=$dest_dir/analysis
         logdir=$output_dir/log
 
-        echo "start statistic the F1 and F2 in $test_set..."
-        # $cmd JOB=1:$nspk $logdir/analysis_perception.JOB.log \
-        #     python local.apl.v3/analysis/get_vowel_perception.py \
-        #         --action collect_feats \
-        #         --input_file $output_dir/utt_pkl.JOB.list \
-        #         --lexicon_file_path $output_dir/lexicon \
-        #         --output_file_path $output_dir/analysis_perception_output.JOB.pkl \
-        #         --phn_from_data true
-
-        python local.apl.v3/analysis/get_vowel_perception.py \
-            --input_file $data_dir/tmp_apl_decoding_${tag}.list \
-            --lexicon_file_path $output_dir/lexicon \
-            --output_file_path $output_dir/analysis_perception_output.pkl \
-            --phn_from_data true
+        echo "start to statistic the F1 and F2 in $test_set..."
+        $cmd JOB=1:$nspk $logdir/analysis_perception.JOB.log \
+            python local.apl.v3/analysis/get_vowel_perception.py \
+                --input_file $output_dir/utt_pkl.JOB.list \
+                --lexicon_file_path $output_dir/lexicon \
+                --output_file_path $output_dir/analysis_perception_output.JOB.pkl \
+                --phn_from_data true
     done
 fi
 
@@ -91,15 +84,14 @@ if [ $stage -le 2 ] && [ ${stop_stage} -ge 2 ]; then
         output_dir=$data_dir/$model_name/analysis
 
         all_json_files_path=""
-        for i in {1..$nspk}; do
+        for i in $(seq 1 $nspk); do
             all_json_files_path+="$output_dir/analysis_perception_output.$i.pkl "
         done
-        echo $all_json_files_path
-        exit 0
 
-        python local.apl.v3/analysis/combine_pickles.py \
+        echo "start to combine output in $test_set..."
+        python local.apl.v3/utils/combine_pickles.py \
             --input_json_files $all_json_files_path \
-            --output_file_path $output_dir/all.pkl
+            --output_file_path $output_dir/analysis_perception_output.pkl
     done
 fi
 
@@ -116,8 +108,11 @@ if [ $stage -le 3 ] && [ ${stop_stage} -ge 3 ]; then
         dest_dir=$data_dir/$model_name
         output_dir=$data_dir/$model_name/analysis
 
+        echo "illustrate vowel perception image and save in $test_set..."
         python local.apl.v3/utils/draw_ellipse.py \
-                --input_file_path $output_dir/all.pkl \
+                --input_file_path $output_dir/analysis_perception_output.pkl \
                 --output_dir_path $output_dir
     done
 fi
+
+echo "successful illustrate vowel perception"
