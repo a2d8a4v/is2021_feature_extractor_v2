@@ -111,7 +111,8 @@ if [ $stage -le 3 ] && [ ${stop_stage} -ge 3 ]; then
         echo "illustrate vowel perception image and save in $test_set..."
         python local.apl.v3/utils/draw_ellipse.py \
                 --input_file_path $output_dir/analysis_perception_output.pkl \
-                --output_dir_path $output_dir
+                --output_dir_path $output_dir \
+                --combine_to_basic_vowels true
     done
 fi
 
