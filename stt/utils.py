@@ -215,6 +215,10 @@ def getLeft(timepoint, total_duration, formants):
     # we hypothesis two continuous timestamp should have similar frequency
     formant_timestamp = round(time_list[position].item(), 4)
     while True:
+        if position <= 0:
+            return position
+        if position >= time_list.shape[0]-1:
+            return position
         if (formant_timestamp == timepoint) or (formant_timestamp <= timepoint and round(time_list[position+1].item(), 4) >= timepoint):
             return position
         elif formant_timestamp > timepoint:
@@ -243,6 +247,10 @@ def getRight(timepoint, total_duration, formants):
     # we hypothesis two continuous timestamp should have similar frequency
     formant_timestamp = round(time_list[position].item(), 4)
     while True:
+        if position <= 0:
+            return position
+        if position >= time_list.shape[0]-1:
+            return position
         if (formant_timestamp == timepoint) or (formant_timestamp <= timepoint and round(time_list[position+1].item(), 4) >= timepoint):
             return position
         elif formant_timestamp < timepoint:

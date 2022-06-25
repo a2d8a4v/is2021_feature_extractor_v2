@@ -1,7 +1,9 @@
 import os
 import json
 import soundfile
+from random import randint
 from tqdm import tqdm
+from time import sleep
 from kaldi_models import SpeechModel
 from audio_models import AudioModel
 from g2p_model import G2PModel
@@ -15,7 +17,8 @@ from utils import (
     opentext,
     fix_data_type,
     ctm2textgrid,
-    readwav
+    readwav,
+    movefile
 )
 
 parser = argparse.ArgumentParser()
@@ -87,6 +90,7 @@ tmp_apl_decoding = "tmp_apl_decoding_"+args.tag if args.tag else "tmp_apl_decodi
 # Temporary data saved for ToBI
 tobi_path = os.path.abspath(os.path.join(data_dir, tmp_apl_decoding, "tobi"))
 if not os.path.isdir(tobi_path):
+    sleep(randint(1,5))
     os.makedirs(tobi_path)
 
 output_dir = os.path.join(data_dir, model_name)
@@ -138,11 +142,6 @@ for utt_id, gop_data in gop_json.items():
         word_list.append(word)
     recog_dict[utt_id] = " ".join(word_list)
 
-# initialize models
-speech_model = SpeechModel(recog_dict, gop_result_dir, gop_json_fn)
-audio_model = AudioModel(sample_rate)
-g2p_model = G2PModel(lexicon_file_path)
-
 ## Due to the memory problem if load all data into memory
 if args.long_decode_mode:
     if os.path.exists(os.path.join(data_dir, tmp_apl_decoding+".{}.list".format(split_number))):
@@ -152,6 +151,12 @@ if args.long_decode_mode:
                 l_ = l.split()
                 # We do not need to keep too much data in memory during inference, we can just load all the data after end the inference
                 all_info[l_[0]] = {} if args.long_decode_mode else pikleOpen(l_[1])
+
+# initialize models
+if len(set(list(all_info.keys())) - set(utt_list)) != 0 or len(set(list(utt_list)) - set(all_info.keys())) != 0:
+    speech_model = SpeechModel(recog_dict, gop_result_dir, gop_json_fn)
+    audio_model = AudioModel(sample_rate)
+    g2p_model = G2PModel(lexicon_file_path)
 
 print("Decoding Start")
 
@@ -266,7 +271,7 @@ if err_list:
             fn.write(utt_id + "\n")
 
 # save all.json file
-jsonSave(all_info, output_dir + "/all.{}.json".format(split_number))
+jsonSave({'utts': all_info}, output_dir + "/all.{}.json".format(split_number))
 
 # write STT Result to file
 if os.path.exists(output_dir + "/text"):

@@ -13,7 +13,7 @@ graph_affix=_tgt3
 data_root=data
 replace_text=true
 CUDA=
-max_nj=20
+max_nj=30
 max_nj_cuda=6
 long_decode_mode=true
 skip_decode=false
@@ -23,8 +23,8 @@ dumpdir=dump
 savejson=data.new.json
 s2t=false
 
-# cmd=queue.pl
-cmd=run.pl
+cmd=queue.pl
+# cmd=run.pl
 
 echo "$0 $@"
 . parse_options.sh
@@ -135,7 +135,7 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
 
         if [ $s2t == false ]; then
             echo "replace the text in ${dest_dir}"
-            python local.apl.v3/stt/in_place_oov_tokens.py --input_text_file $data_root/${test_set}/text \
+            python local.apl.v3/utils/in_place_oov_tokens.py --input_text_file $data_root/${test_set}/text \
                                                            --output_text_file $dest_dir/text \
                                                            --words_file $lang/words.txt
         fi
@@ -217,7 +217,7 @@ if [ $stage -le 5 ] && [ $stop_stage -ge 5 ] ; then
 
         nspk=$(wc -l <$data_root/$test_set/spk2utt)
         
-        if [ $nspk -ge $max_nj ]; then
+        if [ $nspk -ge $max_nj_cuda ]; then
             nspk=$max_nj_cuda;
         fi
 
@@ -244,7 +244,7 @@ if [ $stage -le 6 ] && [ $stop_stage -ge 6 ] ; then
 
         nspk=$(wc -l <$data_root/$test_set/spk2utt)
         
-        if [ $nspk -ge $max_nj ]; then
+        if [ $nspk -ge $max_nj_cuda ]; then
             nspk=$max_nj_cuda;
         fi
         
@@ -256,7 +256,7 @@ if [ $stage -le 6 ] && [ $stop_stage -ge 6 ] ; then
         logdir=$dest_dir/logdir
         mkdir -pv $logdir
         
-        echo "Parallel processing of feature extracting.scp ..... "
+        echo "Parallel processing of feature extracting for $test_set..... "
         $cmd JOB=1:$nspk $logdir/prepare_feats.JOB.log \
             CUDA_VISIBLE_DEVICES=${CUDA} python local.apl.v3/stt/prepare_feats_queue.py --data_dir $data_dir \
                 --split_number JOB \
@@ -276,22 +276,28 @@ if [ $stage -le 7 ] && [ $stop_stage -ge 7 ] ; then
 
         nspk=$(wc -l <$data_root/$test_set/spk2utt)
         
-        if [ $nspk -ge $max_nj ]; then
+        if [ $nspk -ge $max_nj_cuda ]; then
             nspk=$max_nj_cuda;
         fi
 
         data_dir=$data_root/$test_set
-        dest_dir=$data_root/$test_set/$model_name
-        cat $dest_dir/error.* > $dest_dir/error
+        dest_dir=$data_dir/$model_name
+        if [ $(find $dest_dir -name "error.*" | wc -l) -gt 0 ]; then
+            cat $dest_dir/error.* > $dest_dir/error
+        fi
         cat $dest_dir/text.* > $dest_dir/text
         cat $dest_dir/ctm.* > $dest_dir/ctm
+        cat $data_dir/tmp_apl_decoding_${tag}.*.list > $data_dir/tmp_apl_decoding_${tag}.list
 
-        json_files = ""
+        json_files=""
         for f in $(find "${dest_dir}" -name "all.*.json"); do
-            json_files += "$f "
+            json_files+="$f "
         done
-        mergejson.py --input-jsons "${json_files}" > $dest_dir/all.json
 
+        echo "Processing files combining for $test_set..... "
+        local.apl.v3/utils/combine_jsons.py \
+            --input_jsons_file_path ${json_files} \
+            --output_file_path $dest_dir/all.json
     done
 fi
 
