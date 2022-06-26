@@ -57,6 +57,18 @@ def openappend(file):
             s[l.split()[0]] = l.split()[1]
     return s
 
+def openctm(file):
+    s = set()
+    with open(file, "r") as f:
+        for l in f.readlines():
+            s.add(l.split()[4])
+    return list(s)
+
+def getbyFilter(data, filter):
+    rtn = [i for i in data if filter in i]
+    return sorted(list(set(rtn)))
+
+
 def readwav(wav_path, rate):
     _, file_extension = os.path.splitext(wav_path)
     if file_extension.lower() == ".wav":
@@ -322,3 +334,10 @@ def open_utt2pkl(file):
             l_ = l.split()
             s[l_[0]] = pikleOpen(l_[1])
     return s
+
+
+def printOut(data):
+    for i,j in data.items():
+        sys.stdout.write(i+'\t')
+        sys.stdout.write(" ".join(j))
+        sys.stdout.write('\n')
