@@ -13,6 +13,7 @@ dumpdir=dump
 datajsoninput=data.new.json
 datajsonoutput=data.new.err_rate.json
 
+echo "$0 $@"
 . utils/parse_options.sh
 
 . ./path.sh
@@ -22,7 +23,7 @@ if [ $stage -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     for data_set in $data_sets; do
         cp $dumpdir/$data_set/deltafalse/${datajsoninput} $dumpdir/$data_set/deltafalse/data.tmp.2.json
         json=$dumpdir/$data_set/deltafalse/${datajsoninput}
-        CUDA_VISIBLE_DEVICES=${CUDA} python local.apl.v1/stt/calculate_error_rate.py --input-json $dumpdir/$data_set/deltafalse/data.tmp.2.json \
+        CUDA_VISIBLE_DEVICES=${CUDA} python local.apl.v3/stt/calculate_error_rate.py --input-json $dumpdir/$data_set/deltafalse/data.tmp.2.json \
             --output-path $dumpdir/$data_set/deltafalse/${datajsonoutput}.tmp \
             --model /share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/disfluency/model/swbd_fisher_bert_Edev.0.9078.pt
         rm $dumpdir/$data_set/deltafalse/data.tmp.2.json

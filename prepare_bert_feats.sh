@@ -15,6 +15,7 @@ datajsonoutput=data.new.dis.json
 # split=False
 savepickle=True
 
+echo "$0 $@"
 . utils/parse_options.sh
 
 . ./path.sh
@@ -29,7 +30,7 @@ if [ $stage -le 0 ] && [ ${stop_stage} -ge 0 ]; then
         else
             appd=$dumpdir/$data_set/deltafalse/data.dis.json
         fi
-        CUDA_VISIBLE_DEVICES=${CUDA} python local.apl.v1/disfluency/get_bert_disfluency.py --input-json $dumpdir/$data_set/deltafalse/data.tmp.json \
+        CUDA_VISIBLE_DEVICES=${CUDA} python local.apl.v3/disfluency/get_bert_disfluency.py --input-json $dumpdir/$data_set/deltafalse/data.tmp.json \
             --output-path $appd \
             --output-pickle-path $dumpdir/$data_set/deltafalse/split_utts_${tag} \
             --save-pickle $savepickle \

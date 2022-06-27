@@ -46,7 +46,7 @@ def main():
     for utt_id, data in dict_json.items():
         ref = remove_gigaspeech_interregnum_tokens(
             process_tltchool_gigaspeech_interregnum_tokens(
-                data.get("output")[0].get("token_prompt")
+                data.get("output")[0].get("token")
             )
         )
         hyp = remove_gigaspeech_interregnum_tokens(
