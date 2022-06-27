@@ -10,6 +10,7 @@ model_dir="Librispeech-model-mct-tdnnf"
 model_name="librispeech"
 tag="20220617_prompt"
 graph_affix=_tgt3
+verbose=0
 data_root=data
 replace_text=true
 CUDA=
