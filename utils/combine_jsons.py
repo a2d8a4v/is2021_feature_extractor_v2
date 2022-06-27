@@ -44,4 +44,4 @@ if __name__ == "__main__":
                 json_utt_dict.update(j['utts'])
 
     # save
-    jsonSave(json_utt_dict, output_file_path)
+    jsonSave({'utts': json_utt_dict}, output_file_path)
