@@ -303,7 +303,7 @@ fi
 
 if [ $stage -le 8 ] && [ $stop_stage -ge 8 ] ; then
     for test_set in $test_sets; do
-        json=$dumpdir/$data_set/deltafalse/data.json
+        json=$dumpdir/$test_set/deltafalse/data.json
         appd=$data_root/$test_set/$model_name/all.json
         # @https://espnet.github.io/espnet/apis/utils_py.html#addjson-py
         addjson.py --verbose ${verbose} -i true \
