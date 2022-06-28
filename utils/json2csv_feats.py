@@ -1,6 +1,7 @@
 import json
 import sys
 import csv
+import argparse
 from utilities import (
     jsonLoad,
     jsonSave,
@@ -12,19 +13,20 @@ if __name__ == '__main__':
 
 
     """
-    { "stt": text, "stt(g2p)": phone_text, "prompt": text_prompt,
-                    "wav_path": wav_path, "ctm": ctm_info, 
-                    "feats": {  **f0_info, **energy_info, 
-                                **sil_feats_info, **word_feats_info,
-                                **phone_feats_info,
-                                "pitch": pitch_feats_info,
-                                "intensity": intensity_feats_info,
-                                "formant": formants_info,
-                                "rhythm": rhythm_feats_info,
-                                "total_duration": total_duration,
-                                "tobi": textgrid_file_path,
-                                "response_duration": response_duration}
-    }
+        { "stt": text, "stt(g2p)": phone_text, "prompt": text_prompt,
+                        "wav_path": wav_path, "ctm": ctm_info, "phone_ctm": phone_ctm_info,
+                        "feats": {  **f0_info, **energy_info, 
+                                    **sil_feats_info, **word_feats_info,
+                                    **phone_feats_info,
+                                    "pitch": pitch_feats_info,
+                                    "intensity": intensity_feats_info,
+                                    "formant": formants_info,
+                                    "rhythm": rhythm_feats_info,
+                                    "total_duration": total_duration,
+                                    "tobi": tobi_feats_info,
+                                    "tg_path": textgrid_file_path,
+                                    "response_duration": response_duration}
+        }
     """
 
     ## args
@@ -39,7 +41,7 @@ if __name__ == '__main__':
                         type=str)
 
     parser.add_argument("--save_csv_file_path",
-                        default="./apl_features_prompt_train_cv",
+                        default="./apl_features_gop_s2t_train_cv.csv",
                         type=str)
 
     args = parser.parse_args()
@@ -56,127 +58,10 @@ if __name__ == '__main__':
         'b1': 3
     }
     rhy_columns = [
-        'npvi_v',
-        'cci_c',
-        'varco_V',
-        'varco_P',
-        'v_num',
-        'num_consonants',
-        'rpvi',
-        'v_std_dev',
-        'phones_num',
-        'mean_v_dur',
-        'varco_C',
-        'speech_rate',
-        'c_sum_dur_sec',
-        'rpvi_c',
-        'v_sum_dur_sec',
-        'num_nucleus',
-        'c_num',
-        'npvi_c',
-        'mean_c_dur',
-        'v_to_c_ratio',
-        'p_std_dev',
-        'cci',
-        'p_sum_variance',
-        'mean_p_dur',
-        'status',
-        'cci_v',
-        'c_std_dev',
-        'npvi',
-        'sum_dur_sec',
-        'rpvi_v',
-        'percent_v'
+        'percent_v', 'rpvi_v', 'cci_v', 'rpvi_c', 'v_std_dev', 'cci', 'rpvi', 'mean_p_dur', 'npvi', 'v_sum_dur_sec', 'p_sum_variance', 'speech_rate', 'num_nucleus', 'sum_dur_sec', 'c_std_dev', 'varco_V', 'v_num', 'mean_v_dur', 'phones_num', 'varco_C', 'c_num', 'npvi_c', 'p_std_dev', 'cci_c', 'c_sum_dur_sec', 'mean_c_dur', 'num_consonants', 'v_to_c_ratio', 'npvi_v', 'status', 'varco_P'
     ]
     csv_columns = [
-        'energy_mad',
-        'energy_max',
-        'energy_mean',
-        'energy_median',
-        'energy_min',
-        'energy_number',
-        'energy_std',
-        'energy_summ',
-        'f0_mad',
-        'f0_max',
-        'f0_mean',
-        'f0_median',
-        'f0_min',
-        'f0_number',
-        'f0_nz_mad',
-        'f0_nz_max',
-        'f0_nz_mean',
-        'f0_nz_median',
-        'f0_nz_min',
-        'f0_nz_number',
-        'f0_nz_std',
-        'f0_nz_summ',
-        'f0_std',
-        'f0_summ',
-        'long_sil_mad',
-        'long_sil_max',
-        'long_sil_mean',
-        'long_sil_median',
-        'long_sil_min',
-        'long_sil_number',
-        'long_sil_rate1',
-        'long_sil_rate2',
-        'long_sil_std',
-        'long_sil_summ',
-        'phone_conf_mad',
-        'phone_conf_max',
-        'phone_conf_mean',
-        'phone_conf_median',
-        'phone_conf_min',
-        'phone_conf_number',
-        'phone_conf_std',
-        'phone_conf_summ',
-        'phone_count',
-        'phone_duration_mad',
-        'phone_duration_max',
-        'phone_duration_mean',
-        'phone_duration_median',
-        'phone_duration_min',
-        'phone_duration_number',
-        'phone_duration_std',
-        'phone_duration_summ',
-        'phone_freq',
-        'phrase_num_disfluency_phrases',
-        'response_duration',
-        'sil_mad',
-        'sil_max',
-        'sil_mean',
-        'sil_median',
-        'sil_min',
-        'sil_number',
-        'sil_rate1',
-        'sil_rate2',
-        'sil_std',
-        'sil_summ',
-        'total_duration',
-        'word_conf_mad',
-        'word_conf_max',
-        'word_conf_mean',
-        'word_conf_median',
-        'word_conf_min',
-        'word_conf_number',
-        'word_conf_std',
-        'word_conf_summ',
-        'word_count',
-        'word_distinct'
-        'word_duration_mad',
-        'word_duration_max',
-        'word_duration_mean',
-        'word_duration_median',
-        'word_duration_min',
-        'word_duration_number',
-        'word_duration_std',
-        'word_duration_summ',
-        'word_freq',
-        'word_num_disfluency'
-        'word_num_disfluency_baseline',
-        'word_num_repeat',
-    ]
+        'phone_conf_median', 'long_sil_summ', 'phone_duration_mad', 'f0_mean', 'f0_nz_max', 'sil_rate2', 'phone_conf_max', 'long_sil_max', 'word_duration_mad', 'f0_nz_summ', 'f0_nz_std', 'word_count', 'word_conf_summ', 'phone_duration_std', 'sil_std', 'f0_max', 'phone_conf_summ', 'word_num_disfluency_baseline', 'phone_conf_mean', 'sil_rate1', 'f0_nz_number', 'response_duration', 'long_sil_mad', 'phone_duration_number', 'word_conf_std', 'energy_min', 'word_num_repeat', 'sil_number', 'word_duration_mean', 'f0_summ', 'f0_nz_mean', 'f0_mad', 'phone_conf_std', 'energy_mad', 'long_sil_mean', 'phone_duration_median', 'total_duration', 'energy_std', 'phone_conf_mad', 'long_sil_min', 'energy_mean', 'word_duration_median', 'word_conf_mean', 'f0_number', 'word_conf_max', 'f0_nz_min', 'f0_std', 'word_duration_min', 'word_conf_median', 'sil_median', 'f0_nz_mad', 'energy_summ', 'word_duration_max', 'energy_median', 'word_duration_std', 'f0_median', 'word_freq', 'phone_duration_mean', 'sil_mad', 'word_distinct', 'phone_freq', 'phone_duration_min', 'long_sil_std', 'long_sil_number', 'sil_max', 'f0_nz_median', 'f0_min', 'word_num_disfluency', 'long_sil_rate1', 'phone_duration_max', 'energy_number', 'word_conf_min', 'word_duration_summ', 'phone_conf_min', 'sil_mean', 'long_sil_median', 'phone_conf_number', 'word_conf_mad', 'word_duration_number', 'long_sil_rate2', 'phone_count', 'energy_max', 'phone_duration_summ', 'sil_min', 'sil_summ', 'word_conf_number']
     level_columns = [
         "level"
     ]
