@@ -286,9 +286,9 @@ if [ $stage -le 7 ] && [ $stop_stage -ge 7 ] ; then
         if [ $(find $dest_dir -name "error.*" | wc -l) -gt 0 ]; then
             cat $dest_dir/error.* > $dest_dir/error
         fi
-        cat $dest_dir/text.* > $dest_dir/text
-        cat $dest_dir/ctm.* > $dest_dir/ctm
-        cat $data_dir/tmp_apl_decoding_${tag}.*.list > $data_dir/tmp_apl_decoding_${tag}.list
+        # cat $dest_dir/text.* > $dest_dir/text
+        # cat $dest_dir/ctm.* > $dest_dir/ctm
+        # cat $data_dir/tmp_apl_decoding_${tag}.*.list > $data_dir/tmp_apl_decoding_${tag}.list
 
         json_files=""
         for f in $(find "${dest_dir}" -name "all.*.json"); do

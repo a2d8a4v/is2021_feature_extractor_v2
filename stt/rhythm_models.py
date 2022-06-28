@@ -1,5 +1,6 @@
 import math
 import os
+import re
 import numpy as np
 
 
@@ -200,7 +201,8 @@ def calculate(phn_ctm_info):
     # phn_ctm_info: text, start_time, duration, word confidence
     for text, start_time, duration, _ in phn_ctm_info:
 
-        phn = text
+        phn = re.sub("\d+", '', text.split('_')[0]).lower()
+
         start_time = start_time
         end_time   = start_time + duration
 

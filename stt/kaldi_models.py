@@ -3,6 +3,7 @@ from collections import defaultdict
 from rhythm_models import calculate
 
 import os
+import re
 import numpy as np
 import json
 from tqdm import tqdm
@@ -184,7 +185,7 @@ class SpeechModel(object):
                     count = 0
                 
                 # BUG: the alignment result has 'SIL' or 'SPN' tokens, just ignore it
-                if phn_id.lower().split('_')[0] in self.ignored_phonemes:
+                if re.sub("\d+", '', phn_id.lower().split('_')[0]) in self.ignored_phonemes:
                     continue
 
                 try:
