@@ -7,14 +7,14 @@ stage=0
 stop_stage=3
 test_sets="cerf_train_tr cerf_train_cv"
 model_name="librispeech"
-tag="20220617_gop_s2t"
+tag="20220617_prompt"
 graph_affix=_tgt3
 data_root=data
 CUDA=
 max_nj_cuda=20
 
-cmd=queue.pl
-# cmd=run.pl
+# cmd=queue.pl
+cmd=run.pl
 
 echo "$0 $@"
 . parse_options.sh
@@ -62,7 +62,7 @@ if [ $stage -le 1 ] && [ ${stop_stage} -ge 1 ]; then
 
         echo "start to statistic the F1 and F2 in $test_set..."
         $cmd JOB=1:$nspk $logdir/analysis_perception.JOB.log \
-            python local.apl.v3/analysis/get_vowel_perception.py \
+            CUDA_VISIBLE_DEVICES=${CUDA} python local.apl.v3/analysis/get_vowel_perception.py \
                 --input_file $output_dir/utt_pkl.JOB.list \
                 --lexicon_file_path $output_dir/lexicon \
                 --output_file_path $output_dir/analysis_perception_output.JOB.pkl \

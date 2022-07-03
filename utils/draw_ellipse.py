@@ -53,7 +53,7 @@ def fitEllipse(cont,method):
     return params, ell_coord
 
 
-def plotSaveConts(contour_list, ellipse_list, color_list, vowel_name, output_dir_path, annotate_vowels=False):
+def plotSaveConts(contour_list, ellipse_list, color_list, vowel_name, output_dir_path, annotate_vowels=False, vowel_list=[]):
     '''Plot a list of contours'''
     import matplotlib.pyplot as plt
     fig=plt.figure()
@@ -89,6 +89,8 @@ def plotSaveConts(contour_list, ellipse_list, color_list, vowel_name, output_dir
         )
         i += 1
 
+    ax2.legend(vowel_list, loc ="lower right") 
+
     save_file_path = os.path.join(output_dir_path, 'draw_ellipse_'+vowel_name.upper()+'.png')
     plt.savefig(save_file_path)
 
@@ -110,6 +112,7 @@ if __name__ == '__main__':
     annotate_vowels = args.annotate_vowels
     vowel_formant_dict = pikleOpen(input_file_path)
     collect_ellipse = []
+    vowel_list = []
 
     # combine
     if combine_to_basic_vowels:
@@ -152,9 +155,11 @@ if __name__ == '__main__':
             vowel_colors[i],
             vowel,
             output_dir_path,
+            vowel_list=[vowel],
             annotate_vowels=annotate_vowels
         )
         collect_ellipse.append(ell)
+        vowel_list.append(vowel)
 
     # save plot image for all
     plotSaveConts(
@@ -163,5 +168,6 @@ if __name__ == '__main__':
         vowel_colors,
         '_vowels',
         output_dir_path,
+        vowel_list=vowel_list,
         annotate_vowels=annotate_vowels
     )
