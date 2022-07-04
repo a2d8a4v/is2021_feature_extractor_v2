@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import math
 import pickle
@@ -116,6 +117,25 @@ def process_tltchool_gigaspeech_interregnum_tokens(tokens):
     if not n:
         n = tokens.split()
     return " ".join(n)
+
+
+def remove_tltschool_interregnum_tokens(tokens):
+
+    disfluency_tltspeech  = [
+        "@eh", "@ehm", "@em", "@mm", "@mmh", "@ns", "@nuh", "@ug", "@uh", "@um", "@whoah", "@unk"
+    ]
+
+    n = []
+    for t in tokens.split():
+        if t.lower() in disfluency_tltspeech:
+            t = ""
+        n.append(t)
+
+    if not n:
+        n = tokens.split()
+
+    return " ".join(n)
+
 
 def remove_gigaspeech_interregnum_tokens(tokens):
     disfluency_gigaspeech = ["AH", "UM", "UH", "EM", "ER", "ERR"]
@@ -317,6 +337,15 @@ def open_utt2value(file):
         for l in f.readlines():
             l_ = l.split()
             s[l_[0]] = l_[1]
+    return s
+
+
+def open_text(file):
+    s = {}
+    with open(file, "r") as f:
+        for l in f.readlines():
+            l_ = l.split()
+            s[l_[0]] = " ".join(l_[1:])
     return s
 
 
