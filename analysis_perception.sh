@@ -37,7 +37,7 @@ if [ $stage -le 0 ] && [ ${stop_stage} -ge 0 ]; then
         data_dir=$data_root/$test_set
         dest_dir=$data_dir/$model_name
         output_dir=$dest_dir/analysis
-        mkdir -pv $output_dir
+        mkdir -pv $output_dir > /dev/null 2>&1
 
         echo "split $test_set into $nspk pieces..."
         python local.apl.v3/utils/split_uttids.py --tmp_decoding_list_file_path $data_dir/tmp_apl_decoding_${tag}.list \

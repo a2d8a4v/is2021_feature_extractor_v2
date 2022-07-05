@@ -121,9 +121,8 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
     for test_set in $test_sets; do
         decode_dir=${model}_online/decode_${test_set}${graph_affix}
         dest_dir=$data_root/$test_set/$model_name
-        if [ ! -d $dest_dir ]; then
-            mkdir -p $dest_dir
-        fi
+        mkdir -pv $dest_dir > /dev/null 2>&1
+
         
         utils/copy_data_dir.sh $data_root/${test_set} $dest_dir
         if [ $replace_text == true ] && [ $s2t == true ]; then
@@ -204,7 +203,7 @@ if [ $stage -le 4 ] && [ $stop_stage -ge 4 ] ; then
         json_dir=${result_dir}/json
         log_dir=${result_dir}/log
         text_fn=$dest_dir/text
-        mkdir -p $json_dir
+        mkdir -p $json_dir > /dev/null 2>&1
         
         echo "Processing GOP result of $data_dir with $model"
         echo "python local/gop/gop_log_parser.py --log_dir $log_dir --json_dir $json_dir --words_fn $lang/words.txt --text_fn $text_fn --conf $model_dir/sample_worker_en.yaml"
@@ -228,7 +227,7 @@ if [ $stage -le 5 ] && [ $stop_stage -ge 5 ] ; then
         result_dir=${decode_dir}/gop_${model_name}
         json_dir=${result_dir}/json
 
-        mkdir -pv $dest_dir/$queue_split
+        mkdir -pv $dest_dir/$queue_split > /dev/null 2>&1
 
         python local.apl.v3/stt/split_input.py --split_number $nspk \
                                         --output_dir_path $dest_dir/$queue_split \
@@ -255,7 +254,7 @@ if [ $stage -le 6 ] && [ $stop_stage -ge 6 ] ; then
         result_dir=${decode_dir}/gop_${model_name}
         json_dir=${result_dir}/json
         logdir=$dest_dir/logdir
-        mkdir -pv $logdir
+        mkdir -pv $logdir > /dev/null 2>&1
         
         echo "Parallel processing of feature extracting for $test_set..... "
         $cmd JOB=1:$nspk $logdir/prepare_feats.JOB.log \
