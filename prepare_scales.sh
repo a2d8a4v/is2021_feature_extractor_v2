@@ -25,7 +25,7 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
     for test_set in $test_sets; do
         data_dir=$data_root/$test_set
 
-        python local.apl.v3/utils/prepare_scale_feats.py \
+        python local.apl.v3/utils/prepare_auto_grader_feats.py \
             --input_text_file_path $data_dir/text \
             --input_cefr_label_file_path $data_dir/scale \
             --output_text_file_path $data_dir/text.tsv \
@@ -53,7 +53,7 @@ if [ $stage -le 2 ] && [ $stop_stage -ge 2 ] ; then
         cat $text_names > $data_dir/text
         cat $cefr_scores_names > $data_dir/scale
 
-        python local.apl.v3/utils/prepare_scale_feats.py \
+        python local.apl.v3/utils/prepare_auto_grader_feats.py \
             --input_text_file_path $data_dir/text \
             --input_cefr_label_file_path $data_dir/scale \
             --output_text_file_path $data_dir/text.tsv \
