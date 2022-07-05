@@ -50,6 +50,9 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
 
         echo "Analysis feats for $test_set..."
         python local.apl.v3/analysis/get_rsquared_rmse_other_coefficients.py \
-            --input_csv_file_path $output_dir/apl_features_${model_name}_${test_set}.csv
+            --input_csv_file_path $output_dir/apl_features_${model_name}_${test_set}.csv \
+            --output_rmse_file_path $output_dir/apl_features_${model_name}_${test_set}_rmse_list
+            --output_rsquared_file_path $output_dir/apl_features_${model_name}_${test_set}_rsquared_list
+            --output_accuracy_file_path $output_dir/apl_features_${model_name}_${test_set}_accuracy_list
     done
 fi

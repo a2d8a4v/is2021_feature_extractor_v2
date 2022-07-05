@@ -54,10 +54,6 @@ def argparse_function():
                             default=None,
                             type=nullable_string)
 
-    parser.add_argument("--output_problem_utts_list_file_path",
-                        default=None,
-                        type=nullable_string)
-
     args = parser.parse_args()
 
     return args
@@ -111,7 +107,7 @@ if __name__ == '__main__':
     X = dataset.drop(['level'],  axis=1)
     columns = X.columns
 
-    items_prblem_dict = {}
+    items_problem_dict = {}
     items_rmse_dict = {}
     items_accuracy_dict = {}
     items_rsquared_dict = {}
@@ -127,7 +123,7 @@ if __name__ == '__main__':
         predicted_y = minor_ols.predict(input_x).to_numpy()
         target_y    = np.squeeze(Y.to_numpy(), axis=1)
         if np.amax(predicted_y.to_numpy()) == np.amin(predicted_y.to_numpy()):
-            items_prblem_dict[item] = input_x.to_numpy()
+            items_problem_dict[item] = input_x.to_numpy()
         else:
             rsquared_value = get_r2_numpy_corrcoef(predicted_y, target_y)
             items_rsquared_dict.setdefault(item, rsquared_value)
@@ -142,3 +138,14 @@ if __name__ == '__main__':
         for within in accuracy_within:
             accuracy_value = accuracy_within_margin(predicted_y, target_y, within)
             items_accuracy_dict.setdefault(within, {}).setdefault(item, accuracy_value)
+
+    # save files
+    for item in analysis_types_list:
+        file_path = getattr(args, "output_{}_file_path".format(item))
+        if file_path is not None:
+            with open(file_path, 'w') as f:
+                for item, rmse_value in items_rmse_dict.items():
+                    f.write("{} {}\n".format(item, rmse_value))
+
+    if items_problem_dict:
+        print(items_problem_dict)
