@@ -56,10 +56,10 @@ if __name__ == '__main__':
 
     # process
     for utt_id, scale in utt_scale_dict.items():
-        if scale.lower() == filter_scale:
+        if scale.lower() == filter_scale.lower():
             utts_list.append(utt_id)
 
-    with open(output_file_path, 'a') as f:
+    with open(output_file_path, 'w') as f:
         for utt_id in utts_list:
             f.write("{}\n".format(utt_id))
 

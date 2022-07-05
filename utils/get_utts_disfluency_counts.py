@@ -44,7 +44,7 @@ if __name__ == '__main__':
     with open(input_utts_list_file_path, 'r') as f:
         lines = f.readlines()
         for utt_id in lines:
-            utts_list.append(utt_id)
+            utts_list.append(utt_id.strip())
 
     # process
     filtered_utts_pkl_file_path_dict = { utt_id:pikleOpen(pkl_file_path) for utt_id, pkl_file_path in utts_pkl_file_path_dict.items() if utt_id in utts_list }

@@ -8,6 +8,23 @@ from utilities import (
     open_utt2value
 )
 
+def argparse_function():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--input_json_file_path",
+                        default="dump/train/deltafalse/data.json",
+                        type=str)
+
+    parser.add_argument("--input_scale_file_path",
+                        default="data/train/scale",
+                        type=str)
+
+    parser.add_argument("--save_csv_file_path",
+                        default="./apl_features_gop_s2t_train_cv.csv",
+                        type=str)
+
+    args = parser.parse_args()
+
 
 if __name__ == '__main__':
 
@@ -30,21 +47,7 @@ if __name__ == '__main__':
     """
 
     ## args
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument("--input_json_file_path",
-                        default="dump/train/deltafalse/data.json",
-                        type=str)
-
-    parser.add_argument("--input_scale_file_path",
-                        default="data/train/scale",
-                        type=str)
-
-    parser.add_argument("--save_csv_file_path",
-                        default="./apl_features_gop_s2t_train_cv.csv",
-                        type=str)
-
-    args = parser.parse_args()
+    args = argparse_function()
 
 
     ## variables
@@ -53,9 +56,14 @@ if __name__ == '__main__':
     save_csv_file_path = args.save_csv_file_path
 
     level_map = {
-        'a1': 1,
-        'a2': 2,
-        'b1': 3
+        0: 0,
+        'A1': 1,
+        'A1+': 2,
+        'A2': 3,
+        'A2+': 4,
+        'B1': 5,
+        'B1+': 6,
+        'B2': 7
     }
     rhy_columns = [
         'percent_v', 'rpvi_v', 'cci_v', 'rpvi_c', 'v_std_dev', 'cci', 'rpvi', 'mean_p_dur', 'npvi', 'v_sum_dur_sec', 'p_sum_variance', 'speech_rate', 'num_nucleus', 'sum_dur_sec', 'c_std_dev', 'varco_V', 'v_num', 'mean_v_dur', 'phones_num', 'varco_C', 'c_num', 'npvi_c', 'p_std_dev', 'cci_c', 'c_sum_dur_sec', 'mean_c_dur', 'num_consonants', 'v_to_c_ratio', 'npvi_v', 'status', 'varco_P'
@@ -83,7 +91,7 @@ if __name__ == '__main__':
             d = data.get("rhythm").get(col)
             save[col] = d
         for col in level_columns:
-            save[col] = level_map.get(_levels.get(utt_id))
+            save[col] = level_map.get(_levels.get(utt_id).upper())
         dict_data.append(save)
 
     try:
