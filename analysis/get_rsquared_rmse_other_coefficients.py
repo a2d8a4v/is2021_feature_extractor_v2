@@ -11,11 +11,11 @@ from tqdm import tqdm
 from espnet.utils.cli_utils import strtobool
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from scipy.stats import spearmanr, linregress
-import statsmodels.api as sml
-from statsmodels import tools
+
+# from scipy.stats import spearmanr, linregress
+from sklearn.linear_model import LinearRegression
+# import statsmodels.api as sml
+# import matplotlib.pyplot as plt
 
 mapping_dict = {
     0: 0,
@@ -50,7 +50,7 @@ def argparse_function():
                         type=str)
 
     for item in analysis_types_list:
-        parser.add_argument("--output_{}_file_path",
+        parser.add_argument("--output_{}_file_path".format(item),
                             default=None,
                             type=nullable_string)
 
@@ -97,7 +97,6 @@ if __name__ == '__main__':
     # variables
     args = argparse_function()
     input_csv_file_path = args.input_csv_file_path
-    output_problem_utts_list_file_path = args.output_problem_utts_list_file_path
 
     # read file
     dataset = pd.read_csv(input_csv_file_path)
@@ -119,10 +118,14 @@ if __name__ == '__main__':
 
         ## R-squared value
         # @See: https://www.adamsmith.haus/python/answers/how-to-calculate-r-squared-with-numpy-in-python
-        minor_ols = sml.OLS(endog=Y, exog=input_x).fit() # Train a new regression model
-        predicted_y = minor_ols.predict(input_x).to_numpy()
+        # @See: https://www.freecodecamp.org/news/how-to-build-and-train-linear-and-logistic-regression-ml-models-in-python/
+        # minor_ols = sml.OLS(endog=Y, exog=input_x).fit() # Train a new regression model
+        minor_ols = LinearRegression()
+        minor_ols.fit(input_x, Y)
+        predicted_y = minor_ols.predict(input_x)#.to_numpy()
+        predicted_y = np.squeeze(predicted_y, axis=1)
         target_y    = np.squeeze(Y.to_numpy(), axis=1)
-        if np.amax(predicted_y.to_numpy()) == np.amin(predicted_y.to_numpy()):
+        if np.amax(predicted_y) == np.amin(predicted_y):
             items_problem_dict[item] = input_x.to_numpy()
         else:
             rsquared_value = get_r2_numpy_corrcoef(predicted_y, target_y)
@@ -143,9 +146,22 @@ if __name__ == '__main__':
     for item in analysis_types_list:
         file_path = getattr(args, "output_{}_file_path".format(item))
         if file_path is not None:
-            with open(file_path, 'w') as f:
-                for item, rmse_value in items_rmse_dict.items():
-                    f.write("{} {}\n".format(item, rmse_value))
+            if item == 'rmse':
+                with open(file_path, 'w') as f:
+                    for item, rmse_value in items_rmse_dict.items():
+                        f.write("{} {}\n".format(item, rmse_value))
+            elif item == 'rsquared':
+                with open(file_path, 'w') as f:
+                    for item, rsquared_value in items_rsquared_dict.items():
+                        f.write("{} {}\n".format(item, rsquared_value))
+            elif item == 'accuracy':
+                with open(file_path, 'w') as f:
+                    for within, infos in items_accuracy_dict.items():
+                        for item, accuracy_value in infos.items():
+                            f.write("{} {} {}\n".format(item, accuracy_value, within))
 
     if items_problem_dict:
-        print(items_problem_dict)
+        print("Can not compute the r-squared value: {}".format(
+                list(items_problem_dict.keys())
+            )
+        )
