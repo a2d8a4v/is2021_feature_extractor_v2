@@ -4,6 +4,8 @@ import argparse
 from tqdm import tqdm
 from espnet.utils.cli_utils import strtobool
 from utilities import (
+    jsonLoad,
+    opendict,
     open_text,
     open_utt2value,
     remove_tltschool_interregnum_tokens
@@ -32,6 +34,10 @@ def argparse_function():
                         default='data/trn/text',
                         type=str)
 
+    parser.add_argument("--input_spk2utt_file_path",
+                        default='data/trn/text',
+                        type=nullable_string)
+
     parser.add_argument("--input_cefr_label_file_path",
                         default='CEFR_LABELS_PATH/trn_cefr_scores.txt',
                         type=str)
@@ -40,11 +46,23 @@ def argparse_function():
                     default='CEFR_LABELS_PATH/trn_cefr_scores.txt',
                     type=str)
 
+    parser.add_argument("--input_json_file_path",
+                    default='CEFR_LABELS_PATH/trn_cefr_scores.txt',
+                    type=str)
+
+    parser.add_argument("--s2t",
+                    default=False,
+                    type=strtobool)
+
     parser.add_argument("--get_specific_labels",
                     default=None,
                     type=nullable_string)
 
     parser.add_argument("--remove_filled_pauses",
+                    default=False,
+                    type=strtobool)
+
+    parser.add_argument("--combine_same_speakerids",
                     default=False,
                     type=strtobool)
 
@@ -71,17 +89,38 @@ if __name__ == '__main__':
     args = argparse_function()
 
     # variables
+    s2t = args.s2t
     get_specific_labels = args.get_specific_labels
     remove_filled_pauses = args.remove_filled_pauses
+    input_spk2utt_file_path = args.input_spk2utt_file_path
+    input_json_file_path = args.input_json_file_path
 
     if get_specific_labels is not None:
         assert get_specific_labels in mapping_dict.keys(), "get_specific_labels was given out-of-domain label!"
 
-    utt_text_dict = open_text(args.input_text_file_path)
+    if not s2t:
+        utt_text_dict = open_text(args.input_text_file_path)
+    else:
+        utt_json_data = jsonLoad(input_json_file_path)['utts']
+        utt_text_dict = { utt_id:utt_info.get('stt') for utt_id, utt_info in utt_json_data.items() }
+
     utt_cefr_file_path_dict = open_utt2value(args.input_cefr_label_file_path)
 
     if remove_filled_pauses:
         utt_text_dict = { utt_id:remove_tltschool_interregnum_tokens(texts) for utt_id, texts in utt_text_dict.items() }
+
+    if input_spk2utt_file_path is not None:
+        spk2utt_dict = opendict(input_spk2utt_file_path)
+        new_utt_text_dict = {}
+        new_utt_cefr_file_path_dict = {}
+        for spk_id, utts_list in spk2utt_dict.items():
+            text_list = []
+            for utt_id in utts_list:
+                text_list.extend(utt_text_dict[utt_id].split())
+                new_utt_cefr_file_path_dict.setdefault(spk_id, utt_cefr_file_path_dict[utt_id])
+            new_utt_text_dict[spk_id] = " ".join(text_list)
+        utt_text_dict = new_utt_text_dict
+        utt_cefr_file_path_dict = new_utt_cefr_file_path_dict
 
     if get_specific_labels is not None:
         count_cefr_labels = 0
@@ -89,13 +128,13 @@ if __name__ == '__main__':
     sst = 0
     with open(args.output_text_file_path, 'w') as f:
         f.write("{}\t{}\t{}\n".format('score', 'sst', 'text'))
-        for utt_id, text in utt_text_dict.items():
+        for utt_or_spk_id, text in utt_text_dict.items():
 
             if get_specific_labels is not None:
-                if get_specific_labels.lower() == utt_cefr_file_path_dict[utt_id].lower():
+                if get_specific_labels.lower() == utt_cefr_file_path_dict[utt_or_spk_id].lower():
                     f.write("{}\t{}\t{}\n".format(
                             mapping_cefr2num(
-                                utt_cefr_file_path_dict[utt_id]
+                                utt_cefr_file_path_dict[utt_or_spk_id]
                             ),
                             sst,
                             text
@@ -105,7 +144,7 @@ if __name__ == '__main__':
             else:
                 f.write("{}\t{}\t{}\n".format(
                         mapping_cefr2num(
-                            utt_cefr_file_path_dict[utt_id]
+                            utt_cefr_file_path_dict[utt_or_spk_id]
                         ),
                         sst,
                         text
