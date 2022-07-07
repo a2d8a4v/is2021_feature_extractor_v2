@@ -146,7 +146,7 @@ class SpeechModel(object):
                 # NOTE: we use the average value of phoneme-level gop score as the word-level gop score
                 word_gop_id, word_gop = words_gop_json_dict[uttid][count]
                 
-                assert word_gop_id == word_id
+                assert word_gop_id == word_id, "{} - {} : {}".format(word_gop_id, word_id, uttid)
 
                 start_time = round(float(start_time), 4)
                 duration = round(float(duration), 4)
@@ -193,7 +193,7 @@ class SpeechModel(object):
                 except:
                     assert 1==2, phns_gop_json_dict[uttid]
                 
-                assert phn_id == phn_gop_id
+                assert phn_gop_id == phn_id, "{} - {} : {}".format(phn_gop_id, phn_id, uttid)
                 
                 start_time = round(float(start_time), 4)
                 duration = round(float(duration), 4)
