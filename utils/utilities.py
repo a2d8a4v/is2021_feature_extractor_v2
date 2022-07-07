@@ -136,6 +136,17 @@ def remove_tltschool_interregnum_tokens(tokens):
 
     return " ".join(n)
 
+def remove_partial_words_call(text):
+    n = []
+    for t in text.split():
+        if '-' == t.lower()[0] or '-' == t.lower()[-1]:
+            t = ""
+        n.append(t)
+
+    if not n:
+        n = text.split()
+
+    return " ".join(n)
 
 def remove_gigaspeech_interregnum_tokens(tokens):
     disfluency_gigaspeech = ["AH", "UM", "UH", "EM", "ER", "ERR"]
