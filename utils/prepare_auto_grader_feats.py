@@ -8,6 +8,7 @@ from utilities import (
     opendict,
     open_text,
     open_utt2value,
+    remove_partial_words_call,
     remove_tltschool_interregnum_tokens
 )
 
@@ -62,6 +63,10 @@ def argparse_function():
                     default=False,
                     type=strtobool)
 
+    parser.add_argument("--remove_partial_words",
+                    default=False,
+                    type=strtobool)
+
     parser.add_argument("--combine_same_speakerids",
                     default=False,
                     type=strtobool)
@@ -72,6 +77,9 @@ def argparse_function():
 
 def mapping_cefr2num(scale):
     return mapping_dict[scale]
+
+def xstr(s):
+    return '' if s is None else str(s)
 
 ## Data preparation
 """
@@ -90,8 +98,10 @@ if __name__ == '__main__':
 
     # variables
     s2t = args.s2t
+    combine_same_speakerids = args.combine_same_speakerids
     get_specific_labels = args.get_specific_labels
     remove_filled_pauses = args.remove_filled_pauses
+    remove_partial_words = args.remove_partial_words
     input_spk2utt_file_path = args.input_spk2utt_file_path
     input_json_file_path = args.input_json_file_path
 
@@ -102,23 +112,28 @@ if __name__ == '__main__':
         utt_text_dict = open_text(args.input_text_file_path)
     else:
         utt_json_data = jsonLoad(input_json_file_path)['utts']
-        utt_text_dict = { utt_id:utt_info.get('stt') for utt_id, utt_info in utt_json_data.items() }
+        utt_text_dict = { utt_id:utt_info.get('stt') for utt_id, utt_info in utt_json_data.items() if xstr(utt_info.get('stt')).strip() }
 
     utt_cefr_file_path_dict = open_utt2value(args.input_cefr_label_file_path)
 
     if remove_filled_pauses:
         utt_text_dict = { utt_id:remove_tltschool_interregnum_tokens(texts) for utt_id, texts in utt_text_dict.items() }
 
-    if input_spk2utt_file_path is not None:
+    if remove_partial_words:
+        utt_text_dict = { utt_id:remove_partial_words_call(texts) for utt_id, texts in utt_text_dict.items() }
+
+    if combine_same_speakerids:
         spk2utt_dict = opendict(input_spk2utt_file_path)
         new_utt_text_dict = {}
         new_utt_cefr_file_path_dict = {}
         for spk_id, utts_list in spk2utt_dict.items():
             text_list = []
             for utt_id in utts_list:
-                text_list.extend(utt_text_dict[utt_id].split())
+                if utt_id in utt_text_dict: # BUG: some recognized result has empty result!
+                    text_list.extend(utt_text_dict[utt_id].split())
                 new_utt_cefr_file_path_dict.setdefault(spk_id, utt_cefr_file_path_dict[utt_id])
-            new_utt_text_dict[spk_id] = " ".join(text_list)
+            if text_list: # BUG: some recognized result has empty result!
+                new_utt_text_dict[spk_id] = " ".join(text_list)
         utt_text_dict = new_utt_text_dict
         utt_cefr_file_path_dict = new_utt_cefr_file_path_dict
 
@@ -126,9 +141,13 @@ if __name__ == '__main__':
         count_cefr_labels = 0
 
     sst = 0
+    max_seq_len = 0
     with open(args.output_text_file_path, 'w') as f:
         f.write("{}\t{}\t{}\n".format('score', 'sst', 'text'))
         for utt_or_spk_id, text in utt_text_dict.items():
+
+            if len(text.split()) > max_seq_len:
+                max_seq_len = len(text.split())
 
             if get_specific_labels is not None:
                 if get_specific_labels.lower() == utt_cefr_file_path_dict[utt_or_spk_id].lower():
@@ -150,6 +169,9 @@ if __name__ == '__main__':
                         text
                     )
                 )
+
+    if max_seq_len > 0:
+        print("Max length from all sequences is {}".format(max_seq_len))
 
     if get_specific_labels is not None:
         print("{} has {} utterances.".format(

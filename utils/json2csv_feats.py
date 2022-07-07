@@ -25,6 +25,8 @@ def argparse_function():
 
     args = parser.parse_args()
 
+    return args
+
 
 if __name__ == '__main__':
 
@@ -48,7 +50,6 @@ if __name__ == '__main__':
 
     ## args
     args = argparse_function()
-
 
     ## variables
     input_json_file_path = args.input_json_file_path
@@ -81,7 +82,8 @@ if __name__ == '__main__':
     dict_data = []
     for utt_id, data in _data.items():
 
-        data = data.get('input')[1].get('feats')
+        # data = data.get('input')[1].get('feats')
+        data = data.get('feats')
 
         save = {}
         for col in csv_columns:
