@@ -1,7 +1,7 @@
 import json
 import sys
 import argparse
-from utils import (
+from utilities import (
     process_tltchool_gigaspeech_interregnum_tokens
 )
 
@@ -16,6 +16,10 @@ parser.add_argument("--output_text_file",
                     type=str)
 
 parser.add_argument("--words_file",
+                    default="Librispeech-model-mct-tdnnf/data/lang/words.txt",
+                    type=str)
+
+parser.add_argument("--conf",
                     default="Librispeech-model-mct-tdnnf/data/lang/words.txt",
                     type=str)
 
@@ -55,11 +59,29 @@ if __name__ == '__main__':
     # get words from input
     words_list, text_dict = opentext(input_text_file)
 
+    # is upper or lower case
+    is_upper_count = 0
+    is_lower_count = 0
+    for i, words_str in enumerate(text_dict.values()):
+        if i >= 100:
+            break
+        for word in words_str.split():
+            for char in word:
+                if char.isupper():
+                    is_upper_count += 1
+                elif char.islower():
+                    is_lower_count += 1
+    maybe_upper_lower = True if is_upper_count > is_lower_count else False
+
     # get words in dict
     words_dict = openwords(words_file)
 
     # get oov word list
     oov_words_list = list(set([word for word in words_list if word not in words_dict]))
+
+    if oov_words_list:
+        print("it has {} oov words!".format(len(oov_words_list)))
+        print(oov_words_list)
 
     # in-place the oov words with unknown word token
     with open(output_text_file, 'w') as f:
@@ -70,7 +92,7 @@ if __name__ == '__main__':
                 if word in oov_words_list:
                     text_list.append(unk)
                     continue
-                text_list.append(word.upper())
+                text_list.append(word.upper() if maybe_upper_lower else word.lower())
             f.write(
                 "{} {}\n".format(
                         utt_id, " ".join(text_list)

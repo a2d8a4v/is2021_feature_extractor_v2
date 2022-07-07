@@ -159,7 +159,7 @@ if [ $stage -le 2 ] && [ $stop_stage -ge 2 ] ; then
         result_dir=${decode_dir}/align_${model_name}
         # steps/chain/align_lats_ctm.sh <data-dir> <lang-dir> <src-dir> <align-dir>
         local.apl.v3/stt/align_lats_ctm.sh --cmd "queue.pl" --nj $nspk --online-ivector-dir $ivectors_data_dir --generate_ali_from_lats true $data_dir $lang $model $result_dir
-   done
+    done
 fi
 
 if [ $stage -le 3 ] && [ $stop_stage -ge 3 ] ; then    
