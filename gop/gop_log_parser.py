@@ -37,16 +37,19 @@ log_dir = args.log_dir
 words_fn = args.words_fn
 text_fn = args.text_fn
 
-
 vocab = {}
 oov_vocab = []
 text_dict = {}
 fns = glob.glob(log_dir + "/gop*log")
 
+# conf
+with open(args.conf) as f:
+    conf = yaml.safe_load(f)
+
 with open(words_fn, "r") as fn:
     for line in fn.readlines():
         info = line.split()
-        word_token = info[0]
+        word_token = info[0].lower() if conf.get('prompt-style') == 'lower' else info[0].upper()
         word_id = info[1]
         vocab[word_token] = word_id
 
@@ -59,6 +62,7 @@ with open(text_fn, "r") as fn:
         # check OOV
         has_oov = False
         for syb in info[1:]:
+            syb = syb.lower() if conf.get('prompt-style') == 'lower' else syb.upper()
             if syb not in vocab:
                 has_oov = True
                 oov_vocab.append(syb)
@@ -71,9 +75,6 @@ with open(text_fn, "r") as fn:
 
 oov_vocab = set(oov_vocab)
 print('Your OOVs vocab: {}'.format(oov_vocab))
-
-with open(args.conf) as f:
-    conf = yaml.safe_load(f)
 
 gop_parser = GOP(conf)
 gop_dict = {}
