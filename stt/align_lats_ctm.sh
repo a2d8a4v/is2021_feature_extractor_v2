@@ -181,4 +181,13 @@ if [ $stage -le 4 ]; then
   steps/get_ctm_fast.sh --cmd "$cmd" --frame-shift 0.03 $data $lang $dir $dir/ctm_word
 fi
 
+if [ $stage -le 5 ]; then
+  if [ $(cat $dir/ctm_word/ctm | cut -f5 -d ' ' | sort -u | uniq | wc -l) -eq 1 ]; then
+    echo "WARNING: you have some problems in your $data/text, like upper-case or lower-case issues, or OOVs."
+  fi
+  if [ $(cat $dir/ctm_phone/ctm | cut -f5 -d ' ' | sort -u | uniq | wc -l) -lt 10 ]; then
+    echo "WARNING: you have some problems in your $data/text, like upper-case or lower-case issues, or OOVs."
+  fi
+fi
+
 echo "$0: done generating lattices from training transcripts."
