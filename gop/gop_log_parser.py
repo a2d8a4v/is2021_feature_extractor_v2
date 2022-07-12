@@ -5,7 +5,7 @@ from tqdm import tqdm
 import glob
 import yaml
 import json
-
+from espnet.utils.cli_utils import strtobool
 from gop_web_parser import GOP
 
 parser = argparse.ArgumentParser()
@@ -31,11 +31,16 @@ parser.add_argument("--conf",
                      default="models/chinese-model/sample_worker_ch.yaml",
                      type=str)
 
+parser.add_argument("--s2t",
+                     default=False,
+                     type=strtobool)
+
 args = parser.parse_args()
 
 log_dir = args.log_dir
 words_fn = args.words_fn
 text_fn = args.text_fn
+s2t = args.s2t
 
 vocab = {}
 oov_vocab = []
@@ -45,14 +50,14 @@ fns = glob.glob(log_dir + "/gop*log")
 # conf
 with open(args.conf) as f:
     conf = yaml.safe_load(f)
+conf.setdefault('s2t', s2t)
 
 with open(words_fn, "r") as fn:
     for line in fn.readlines():
         info = line.split()
-        word_token = info[0].lower() if conf.get('prompt-style') == 'lower' else info[0].upper()
+        word_token = info[0].upper() if conf.get('prompt-style') else info[0].lower()
         word_id = info[1]
         vocab[word_token] = word_id
-
 
 with open(text_fn, "r") as fn:
     for line in fn.readlines():
@@ -62,7 +67,7 @@ with open(text_fn, "r") as fn:
         # check OOV
         has_oov = False
         for syb in info[1:]:
-            syb = syb.lower() if conf.get('prompt-style') == 'lower' else syb.upper()
+            syb = syb.upper() if conf.get('prompt-style') else syb.lower()
             if syb not in vocab:
                 has_oov = True
                 oov_vocab.append(syb)
@@ -97,11 +102,13 @@ for log_path in tqdm(fns):
                 final_msg = gop_msg.split("<GOP>")[1]
                 gop_parser.set_prompt(prompt)
 
-                try:
-                    gop_word_dict = gop_parser.process_GOP(final_msg)
-                    gop_dict[utt_id] = gop_word_dict
-                except:
-                    print(utt_id, prompt)
+                # try:
+                # if utt_id != 'speakerIp16_A2_002003002001-promptIp16_A2_en_22_109_102':
+                #     continue
+                gop_word_dict = gop_parser.process_GOP(final_msg)
+                gop_dict[utt_id] = gop_word_dict
+                # except:
+                #     print(utt_id, prompt)
 
 with open(args.json_dir + "/gop_scores.json", "w") as fn:
     json.dump(gop_dict, fn, indent=4)
