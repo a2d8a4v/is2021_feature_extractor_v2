@@ -43,13 +43,19 @@ def opendict(file):
             s[l_[0]] = l_[1:]
     return s
 
-def opentext(file, col_start):
+def opentext(file):
     s = set()
+    t = dict()
     with open(file, "r") as f:
         for l in f.readlines():
-            for w in l.split()[col_start:]:
-                s.add(w)
-    return [w.lower() for w in list(s)]
+            _l = l.split()
+            uttid = _l[0]
+            words = _l[1:]
+            t[uttid] = " ".join(words)
+            # remove the utt_id part
+            for word in words:
+                s.add(word.lower())
+    return list(s), t
 
 def openappend(file):
     s = {}
