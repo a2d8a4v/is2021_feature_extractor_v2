@@ -42,6 +42,7 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
             --input_text_file_path $data_dir/text \
             --input_spk2utt_file_path $data_dir/spk2utt \
             --input_cefr_label_file_path $data_dir/scale \
+            --input_spk2momlang_file_path $data_dir/momlanguage \
             --output_text_file_path $data_dir/text.tsv \
             --remove_filled_pauses $remove_filled_pauses \
             --combine_same_speakerids $combine_same_speakerids
@@ -54,11 +55,13 @@ if [ $stage -le 2 ] && [ $stop_stage -ge 2 ] ; then
         mkdir -pv data/${test_set} > /dev/null 2>&1
     done
 
+    momlang_names=""
     cefr_scores_names=""
     text_names=""
     sp2utt_names=""
     for test_set in $test_sets; do
         data_dir=$data_root/$test_set
+        momlang_names+="${data_root}/momlanguage "
         cefr_scores_names+="${data_dir}/scale "
         text_names+="${data_dir}/text "
         sp2utt_names+="${data_dir}/spk2utt "
@@ -76,6 +79,7 @@ if [ $stage -le 2 ] && [ $stop_stage -ge 2 ] ; then
             --input_json_file_path $dest_dir/all.json \
             --input_text_file_path $data_dir/text \
             --input_spk2utt_file_path $data_dir/spk2utt \
+            --input_spk2momlang_file_path $data_dir/momlanguage \
             --input_cefr_label_file_path $data_dir/scale \
             --output_text_file_path $data_dir/text.tsv \
             --remove_filled_pauses $remove_filled_pauses \

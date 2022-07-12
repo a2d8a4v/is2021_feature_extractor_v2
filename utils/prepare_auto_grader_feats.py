@@ -39,6 +39,10 @@ def argparse_function():
                         default='data/trn/text',
                         type=nullable_string)
 
+    parser.add_argument("--input_spk2momlang_file_path",
+                        default='data/trn/momlanguage',
+                        type=nullable_string)
+
     parser.add_argument("--input_cefr_label_file_path",
                         default='CEFR_LABELS_PATH/trn_cefr_scores.txt',
                         type=str)
@@ -115,6 +119,7 @@ if __name__ == '__main__':
         utt_text_dict = { utt_id:utt_info.get('stt') for utt_id, utt_info in utt_json_data.items() if xstr(utt_info.get('stt')).strip() }
 
     utt_cefr_file_path_dict = open_utt2value(args.input_cefr_label_file_path)
+    utt_momlang_dict = open_utt2value(args.input_spk2momlang_file_path)
 
     if remove_filled_pauses:
         utt_text_dict = { utt_id:remove_tltschool_interregnum_tokens(texts) for utt_id, texts in utt_text_dict.items() }
@@ -123,19 +128,24 @@ if __name__ == '__main__':
         utt_text_dict = { utt_id:remove_partial_words_call(texts) for utt_id, texts in utt_text_dict.items() }
 
     if combine_same_speakerids:
+        assert input_spk2utt_file_path is not None, 'You need to point a specific path for input_spk2utt_file_path'
+
         spk2utt_dict = opendict(input_spk2utt_file_path)
         new_utt_text_dict = {}
         new_utt_cefr_file_path_dict = {}
+        new_utt_momlang_dict = {}
         for spk_id, utts_list in spk2utt_dict.items():
             text_list = []
             for utt_id in utts_list:
                 if utt_id in utt_text_dict: # BUG: some recognized result has empty result!
                     text_list.extend(utt_text_dict[utt_id].split())
                 new_utt_cefr_file_path_dict.setdefault(spk_id, utt_cefr_file_path_dict[utt_id])
+                new_utt_momlang_dict.setdefault(spk_id, utt_momlang_dict[utt_id])
             if text_list: # BUG: some recognized result has empty result!
                 new_utt_text_dict[spk_id] = " ".join(text_list)
         utt_text_dict = new_utt_text_dict
         utt_cefr_file_path_dict = new_utt_cefr_file_path_dict
+        utt_momlang_dict = new_utt_momlang_dict
 
     if get_specific_labels is not None:
         count_cefr_labels = 0
@@ -143,7 +153,7 @@ if __name__ == '__main__':
     sst = 0
     max_seq_len = 0
     with open(args.output_text_file_path, 'w') as f:
-        f.write("{}\t{}\t{}\n".format('score', 'sst', 'text'))
+        f.write("{}\t{}\t{}\t{}\n".format('score', 'sst', 'l1', 'text'))
         for utt_or_spk_id, text in utt_text_dict.items():
 
             if len(text.split()) > max_seq_len:
@@ -151,21 +161,23 @@ if __name__ == '__main__':
 
             if get_specific_labels is not None:
                 if get_specific_labels.lower() == utt_cefr_file_path_dict[utt_or_spk_id].lower():
-                    f.write("{}\t{}\t{}\n".format(
+                    f.write("{}\t{}\t{}\t{}\n".format(
                             mapping_cefr2num(
                                 utt_cefr_file_path_dict[utt_or_spk_id]
                             ),
                             sst,
+                            utt_momlang_dict[utt_or_spk_id],
                             text
                         )
                     )
                     count_cefr_labels+=1
             else:
-                f.write("{}\t{}\t{}\n".format(
+                f.write("{}\t{}\t{}\t{}\n".format(
                         mapping_cefr2num(
                             utt_cefr_file_path_dict[utt_or_spk_id]
                         ),
                         sst,
+                        utt_momlang_dict[utt_or_spk_id],
                         text
                     )
                 )
