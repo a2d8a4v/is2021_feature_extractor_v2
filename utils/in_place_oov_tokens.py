@@ -2,6 +2,7 @@ import json
 import sys
 import argparse
 from utilities import (
+    opentext,
     process_tltchool_gigaspeech_interregnum_tokens
 )
 
@@ -19,26 +20,7 @@ parser.add_argument("--words_file",
                     default="Librispeech-model-mct-tdnnf/data/lang/words.txt",
                     type=str)
 
-parser.add_argument("--conf",
-                    default="Librispeech-model-mct-tdnnf/data/lang/words.txt",
-                    type=str)
-
 args = parser.parse_args()
-
-
-def opentext(file):
-    s = set()
-    t = dict()
-    with open(file, "r") as f:
-        for l in f.readlines():
-            _l = l.split()
-            uttid = _l[0]
-            words = _l[1:]
-            t[uttid] = " ".join(words)
-            # remove the utt_id part
-            for word in words:
-                s.add(word.lower())
-    return list(s), t
 
 def openwords(file):
     s = dict()
