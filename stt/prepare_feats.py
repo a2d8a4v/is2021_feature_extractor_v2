@@ -11,7 +11,6 @@ from utils import (
     pickleStore,
     pikleOpen,
     opendict,
-    opentext,
     fix_data_type,
     ctm2textgrid,
     readwav,

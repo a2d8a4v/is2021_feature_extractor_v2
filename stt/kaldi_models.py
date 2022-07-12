@@ -57,19 +57,63 @@ def get_stats(numeric_list, prefix=""):
     
     
 class SpeechModel(object):
-    def __init__(self, recog_dict, gop_result_dir, gop_json_fn):
+    def __init__(self, recog_dict, gop_result_dir, gop_json_fn, conf):
+        dir_name = conf.get('dir-name', "exp/nnet3_chain")
         # Fluency
         self.sil_seconds = 0.145
         self.long_sil_seconds = 0.495
-        self.ignored_phonemes = ["@sil", "sil", 'spn']
+        self.ignored_phonemes = self._open_silence_tokens(
+                os.path.abspath(
+                    os.path.join(dir_name, conf.get('sil-phone-path'))
+                )
+            ) if conf.get('sil-phone-path', None) is not None else []
         self.disfluency_phrases = ['you know', 'i mean', 'well', 'like']
-        self.disflunecy_words = ["AH", "UM", "UH", "EM", "OH", "ER", "ERR"]
-        self.disflunecy_words_ets_baseline = ["UM", "UH"]
-        self.special_words = ["<UNK>"]
+        self.disflunecy_words = ["AH", "UM", "UH", "EM", "OH", "ER", "ERR", "ah", "um", "uh", "em", "oh", "er", "err"]
+        self.disflunecy_words_ets_baseline = ["UM", "UH", "um", "uh"]
+        self.special_words = ['<UNK>', '<unk>']
+        self.skip_utts_list = None
+        # Other
+        self.s2t = conf.get('s2t', False)
+        self.skip_word_unk = conf.get('skip-word-unk', True)
+        self.maybe_upper_lower = conf.get('tokens-in-case', True)
+        if self.s2t:
+            dir_name = conf.get('dir-name', "exp/nnet3_chain")
+            self.gop_result_skip_word_unk = conf.get('gop-read-skip-word-unk', True)
+            self.disfluency_special_tokens = self._open_disfluency_tokens(
+                    os.path.abspath(
+                        os.path.join(dir_name, conf.get('nonsil-phone-path'))
+                    )
+                ) if conf.get('nonsil-phone-path', None) is not None else []
         # STT
         self.recog_dict = recog_dict
         self.gop_word_ctm_info, self.gop_phone_ctm_info = self.get_gop_ctm(gop_result_dir, gop_json_fn)
     
+    @classmethod
+    def _open_disfluency_tokens(self, file_path):
+        filter_list = ['@', '<']
+        disfluency_list = []
+        with open(file_path, 'r') as f:
+            for line in f.readlines():
+                for filter in filter_list:
+                    token = line.split()[0]
+                    if filter == token[0]:
+                        disfluency_list.append(token)
+        return disfluency_list
+
+    @classmethod
+    def _open_silence_tokens(self, file_path):
+        # filter_list = ['sil', 'spn', 'hes']
+        silence_set = set()
+        with open(file_path, 'r') as f:
+            for line in f.readlines():
+                token = line.strip()
+                # if token in filter_list:
+                silence_set.add(token)
+                token = line.strip().split('_')[0]
+                # if token in filter_list:
+                silence_set.add(token)
+        return list(silence_set)
+
     # STT features
     def recog(self, uttid):
         text = self.recog_dict[uttid]
@@ -108,6 +152,9 @@ class SpeechModel(object):
         
         return phone_ctm_info, phone_text
     
+    def get_skip_utt_list(self):
+        return self.skip_utts_list
+
     def get_gop_ctm(self, gop_result_dir, gop_json_fn):
         # confidence (GOP)
         with open(gop_json_fn, "r") as fn:
@@ -118,13 +165,23 @@ class SpeechModel(object):
         
         # word-level ctm
         words_gop_json_dict = {}
+        skip_utts_list = []
+        tmp_skip_words_list = self.special_words
+        if self.s2t:
+            tmp_skip_words_list += self.disfluency_special_tokens
         for uttid, gop_data in gop_json.items():
             word_list = []
             for word_info in gop_data.get('GOP'):
-                word = word_info[0]
+                word = word_info[0].upper() if self.maybe_upper_lower else word_info[0].lower()
                 word_gop_score = word_info[1][-1][-1] # get average only - word-level gop score
                 word_list.append([word, word_gop_score])
+            # we avoid to process the utterances filled with useless tokens
+            word_filter_sum = sum([ 1 for word, _ in word_list if word in tmp_skip_words_list ])
+            if word_filter_sum == len(word_list):
+                skip_utts_list.append(uttid)
+                continue
             words_gop_json_dict.setdefault(uttid, []).extend(word_list)
+        self.skip_utts_list = skip_utts_list
 
         with open(os.path.join(gop_result_dir, "word.ctm")) as wctm_fn:
             count = 0
@@ -132,13 +189,23 @@ class SpeechModel(object):
             for line in wctm_fn.readlines():
                 uttid, _, start_time, duration, word_id = line.split()
 
+                # we avoid to process the utterances filled with useless tokens
+                if uttid in skip_utts_list:
+                    continue
+
                 # ISSUE: we seperate input to queue jobs, utts have already been seperated to different files 
                 if uttid not in words_gop_json_dict:
                     continue
 
                 # we do not calculate gop for unk tokens
-                if word_id in self.special_words:
-                    continue
+                if self.skip_word_unk:
+                    if word_id in self.special_words:
+                        continue
+
+                if self.s2t:
+                    if self.gop_result_skip_word_unk:
+                        if word_id in self.disfluency_special_tokens:
+                            continue
 
                 if prev_uttid != uttid:
                     count = 0
@@ -146,7 +213,7 @@ class SpeechModel(object):
                 # NOTE: we use the average value of phoneme-level gop score as the word-level gop score
                 word_gop_id, word_gop = words_gop_json_dict[uttid][count]
                 
-                assert word_gop_id == word_id, "{} - {} : {}".format(word_gop_id, word_id, uttid)
+                assert word_gop_id == word_id, "{} - {} : {} - {}".format(word_gop_id, word_id, uttid, words_gop_json_dict[uttid])
 
                 start_time = round(float(start_time), 4)
                 duration = round(float(duration), 4)
@@ -164,10 +231,12 @@ class SpeechModel(object):
         # phoneme-level ctm
         phns_gop_json_dict = {}
         for uttid, gop_data in gop_json.items():
-            phn_list = []
+            if uttid in skip_utts_list:
+                continue
             for word_info in gop_data.get('GOP'):
                 word = word_info[0]
                 phn_gop_info = word_info[1][:-1] # remove word-level gop scores
+                phn_gop_info = [ [phn_gop_id, phn_gop] for phn_gop_id, phn_gop in phn_gop_info if re.sub("\d+", '', phn_gop_id.lower().split('_')[0]) not in self.ignored_phonemes ]
                 phns_gop_json_dict.setdefault(uttid, []).extend(phn_gop_info)
 
         with open(os.path.join(gop_result_dir, "phone.ctm")) as pctm_fn:
@@ -176,24 +245,28 @@ class SpeechModel(object):
             for line in pctm_fn.readlines():
 
                 uttid, _, start_time, duration, phn_id = line.split()
-                
+
+                # we avoid to process the utterances filled with useless tokens
+                if uttid in skip_utts_list:
+                    continue
+
                 # ISSUE: we seperate input to queue jobs, utts have already been seperated to different files 
                 if uttid not in phns_gop_json_dict:
+                    continue
+
+                # BUG: the alignment result has 'SIL', 'SPN' or other silence tokens, just ignore it
+                if re.sub("\d+", '', phn_id.lower().split('_')[0]) in self.ignored_phonemes:
                     continue
 
                 if prev_uttid != uttid:
                     count = 0
                 
-                # BUG: the alignment result has 'SIL' or 'SPN' tokens, just ignore it
-                if re.sub("\d+", '', phn_id.lower().split('_')[0]) in self.ignored_phonemes:
-                    continue
-
-                try:
-                    phn_gop_id, phn_gop = phns_gop_json_dict[uttid][count]
-                except:
-                    assert 1==2, phns_gop_json_dict[uttid]
+                # try:
+                phn_gop_id, phn_gop = phns_gop_json_dict[uttid][count]
+                # except:
+                #     assert 1 == 2, "{} - {} - {} : {} - {} : {}".format(phn_gop_id, phn_id, count, uttid, phns_gop_json_dict[uttid], gop_phone_ctm_info[uttid])
                 
-                assert phn_gop_id == phn_id, "{} - {} : {}".format(phn_gop_id, phn_id, uttid)
+                assert phn_gop_id == phn_id, "{} - {} : {} - {}".format(phn_gop_id, phn_id, uttid, phns_gop_json_dict[uttid])
                 
                 start_time = round(float(start_time), 4)
                 duration = round(float(duration), 4)

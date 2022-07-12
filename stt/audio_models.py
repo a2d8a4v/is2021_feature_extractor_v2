@@ -7,7 +7,6 @@ from PyToBI.tobi import TextGridOperations
 
 import librosa
 
-import tempfile
 import os
 import math
 import numpy as np
@@ -65,9 +64,10 @@ def get_stats(numeric_list, prefix=""):
     
     
 class AudioModel(object):
-    def __init__(self, sample_rate):
+    def __init__(self, sample_rate, conf):
         self.sample_rate = sample_rate
         self.frame_length = 25 * self.sample_rate // 1000
+        self.conf = conf
     
     def get_f0(self, speech, frame_length=800, win_length=400):
         # it use ceil method to get the length of f0 list
@@ -156,26 +156,24 @@ class AudioModel(object):
 
         return intensity_list
 
-#     def __make_script(self):
-#         # _script_loc = tempfile.mktemp(suffix='.praat')
-#         _script_loc = os.path.abspath('./_formants.praat')
-# #         with open(_script_loc, 'w') as fid:
-# #             fid.write("""# take name of wav file from stdin and dump formant table to stdout
-# # form File
-# # sentence filename
-# # positive maxformant 5500
-# # real winlen 0.025
-# # positive preemph 50
-# # endform
-# # Read from file... 'filename$'
-# # To Formant (burg)... 0.01 5 'maxformant' 'winlen' 'preemph'
-# # List... no yes 6 no 3 no 3 no
-# # exit""")
+    def __make_script(self):
 
-#         # _dir = os.path.dirname(os.path.abspath(__file__))
-#         # formant_script_path = os.path.abspath(os.path.join(_dir, "formant/formants.praat"))
+        _script_loc = os.path.abspath("_formants.{}.praat".format(self.conf.get('split_number')))
 
-#         return _script_loc
+        with open(_script_loc, 'w') as fid:
+            fid.write("""# take name of wav file from stdin and dump formant table to stdout
+form File
+sentence filename
+positive maxformant 5500
+real winlen 0.025
+positive preemph 50
+endform
+Read from file... 'filename$'
+To Formant (burg)... 0.01 5 'maxformant' 'winlen' 'preemph'
+List... no yes 6 no 3 no 3 no
+exit""")
+
+        return _script_loc
 
     def __file2formants(self, filename, maxformant=5500, winlen=0.025, preemph=50):
         """Extract formant table from audio file using praat.
@@ -203,15 +201,7 @@ class AudioModel(object):
         # This will print the info from the textgrid object, and res[1] is a parselmouth.Data object with a TextGrid inside
         """
 
-        # res = run_praat(self.__make_script(), filename, maxformant, winlen, preemph)[1]
-        _dir = os.path.dirname(os.path.abspath(__file__))
-        res = run_praat(
-            os.path.abspath(os.path.join(_dir, "formant/formants.praat")),
-            filename,
-            maxformant,
-            winlen,
-            preemph
-        )[1]
+        res = run_praat(self.__make_script(), filename, maxformant, winlen, preemph)[1]
         rtn = np.array([list(map(_float, x.strip().split('\t')[:6])) for x in res.split('\n')[1:-1]]).tolist()
         return rtn
 

@@ -1,9 +1,10 @@
 import os
 import json
+import yaml
 import soundfile
+import subprocess
 from random import randint
 from tqdm import tqdm
-from time import sleep
 from kaldi_models import SpeechModel
 from audio_models import AudioModel
 from g2p_model import G2PModel
@@ -52,8 +53,17 @@ parser.add_argument("--text_file_path",
                     default="data/train/text",
                     type=str)
 
+parser.add_argument("--input_word_file_path",
+                    default="data/lang/words.txt",
+                    type=str,
+                    required=True)
+
 parser.add_argument("--gop_json_fn",
                     default="gop_result_dir/json/gop.json",
+                    type=str)
+
+parser.add_argument("--conf_file_path",
+                    default="sample.yaml",
                     type=str)
 
 parser.add_argument("--sample_rate",
@@ -74,24 +84,51 @@ parser.add_argument("--long_decode_mode",
                     default=False,
                     type=strtobool)
 
+parser.add_argument("--s2t",
+                    default=False,
+                    type=strtobool)
+
 
 args = parser.parse_args()
 
+s2t = args.s2t
 lexicon = args.lexicon
 data_dir = args.data_dir
 model_name = args.model_name
 gop_result_dir = args.gop_result_dir
 gop_json_fn = args.gop_json_fn
 sample_rate = args.sample_rate
+conf_file_path = args.conf_file_path
 utt2dur_file_path = args.utt2dur_file_path
+input_word_file_path = args.input_word_file_path
 split_number = args.split_number
 tmp_apl_decoding = "tmp_apl_decoding_"+args.tag if args.tag else "tmp_apl_decoding"
+
+# Convert tokens to upper or lower case
+is_upper_count = 0
+is_lower_count = 0
+_, tmp_text_dict = opentext(input_word_file_path)
+for i, words_str in enumerate(tmp_text_dict.values()):
+    if i >= 100:
+        break
+    for word in words_str.split():
+        for char in word:
+            if char.isupper():
+                is_upper_count += 1
+            elif char.islower():
+                is_lower_count += 1
+maybe_upper_lower = True if is_upper_count > is_lower_count else False
+del tmp_text_dict
+del is_upper_count
+del is_lower_count
+del _
 
 # Temporary data saved for ToBI
 tobi_path = os.path.abspath(os.path.join(data_dir, tmp_apl_decoding, "tobi"))
 if not os.path.isdir(tobi_path):
-    sleep(randint(1,5))
-    os.makedirs(tobi_path)
+    mkdir_bash_command = "mkdir -pv {}".format(tobi_path)
+    process = subprocess.Popen(mkdir_bash_command.split(), stdout=subprocess.PIPE)
+    output, error = process.communicate()
 
 output_dir = os.path.join(data_dir, model_name)
 
@@ -112,6 +149,13 @@ recog_dict = {}
 word2phn_dict = opendict(
     lexicon_file_path if os.path.exists(lexicon_file_path) else lexicon
 )
+
+# conf
+with open(conf_file_path, 'r') as f:
+    conf = yaml.safe_load(f)
+conf.setdefault('tokens-in-case', maybe_upper_lower)
+conf.setdefault('s2t', s2t)
+conf.setdefault('split_number', split_number)
 
 # write new lexicon result to file
 if not os.path.exists(lexicon_file_path):
@@ -154,9 +198,12 @@ if args.long_decode_mode:
 
 # initialize models
 if len(set(list(all_info.keys())) - set(utt_list)) != 0 or len(set(list(utt_list)) - set(all_info.keys())) != 0:
-    speech_model = SpeechModel(recog_dict, gop_result_dir, gop_json_fn)
-    audio_model = AudioModel(sample_rate)
+    speech_model = SpeechModel(recog_dict, gop_result_dir, gop_json_fn, conf)
+    audio_model = AudioModel(sample_rate, conf)
     g2p_model = G2PModel(lexicon_file_path)
+
+# append error list
+err_list.extend(speech_model.get_skip_utt_list())
 
 print("Decoding Start")
 
