@@ -13,9 +13,9 @@ combine_same_speakerids=false
 remove_filled_pauses=false
 main_model_name="librispeech"
 tag="20220617_prompt"
-main_corpus_data_root="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline"
+main_corpus_data_root="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline/data"
 main_test_sets="cerf_train_tr cerf_train_cv"
-other_corpus_data_root="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/nict_jle/asr3"
+other_corpus_data_root="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/nict_jle/asr3/data"
 s2t=false
 
 . ./utils/parse_options.sh
@@ -29,7 +29,7 @@ if [ $stage -le -1 ] && [ $stop_stage -ge -1 ] ; then
     echo "A. Prepare train test data of main data"
     for test_set in $main_test_sets; do
         data_dir=$main_corpus_data_root/$test_set
-        dest_dir=$data_dir/$model_name
+        dest_dir=$data_dir/$main_model_name
 
         python local.apl.v3/utils/prepare_auto_grader_feats.py \
             --s2t $s2t \
@@ -54,7 +54,7 @@ if [ $stage -le 0 ] && [ $stop_stage -ge 0 ] ; then
 
         python local.apl.v3/utils/combine_auto_grader_feats.py \
             --input_tsv_files_path $main_data_dir/text.tsv $other_data_dir/text.tsv \
-            --output_text_file_path $main_data_dir/text_combined.tsv
+            --output_text_file_path $dest_data_dir/text.tsv
     done
 fi
 
@@ -68,7 +68,7 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
 
         python local.apl.v3/utils/combine_auto_grader_feats.py \
             --input_tsv_files_path $main_data_dir/text.tsv $other_data_dir/text.tsv \
-            --output_text_file_path $main_data_dir/text.tsv
+            --output_text_file_path $dest_data_dir/text.tsv
     done
 fi
 
@@ -82,6 +82,6 @@ if [ $stage -le 2 ] && [ $stop_stage -ge 2 ] ; then
 
         python local.apl.v3/utils/combine_auto_grader_feats.py \
             --input_tsv_files_path $main_data_dir/text.tsv $other_data_dir/text.tsv \
-            --output_text_file_path $main_data_dir/text.tsv
+            --output_text_file_path $dest_data_dir/text.tsv
     done
 fi

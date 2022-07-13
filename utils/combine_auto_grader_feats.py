@@ -42,9 +42,9 @@ def read_tsv(input_file, quotechar=None):
             lines.append(line)
         return lines
 
-def create_examples(lines, set_type):
+def create_examples(lines):
     """Creates examples for the training and dev sets."""
-    lines_count = len(lines)
+    lines_count = len(lines)-1
     data_dict = {}
     columns = {}
     for (i, line) in enumerate(lines):
@@ -87,8 +87,10 @@ if __name__ == '__main__':
         collect_data_dict.setdefault(i, get_file_content_dict)
 
     # check columns in all files are the same, insensitive case of postions of the columns
-    count_list = list(set([ item for item in column_list for column_list in input_columns_list ] + columns_with_positions)).sort()
+    count_list = list(set([ item for column_list in input_columns_list for item in column_list ] + columns_with_positions)).sort()
     assert count_list == columns_with_positions.sort(), 'columns in different input tsv has no equal columns'
+    count_list = sorted(list(map(len, list(map(set, input_columns_list)))))
+    assert count_list[0] == sorted(count_list)[-1], 'columns in different input tsv are missing'
 
     with open(output_text_file_path, 'w') as f:
         f.write("{}\n".format(
@@ -97,9 +99,10 @@ if __name__ == '__main__':
         )
         for i, data_info_dict in collect_data_dict.items():
             get_line_count = lines_count_list[i]
-            for j in range(0, len(get_line_count), 1):
+            for j in range(0, get_line_count, 1):
                 line_content_list = []
                 for item in columns_with_positions:
+
                     line_content_list.append(
                         data_info_dict[item][j]
                     )
