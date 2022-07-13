@@ -92,6 +92,7 @@ if __name__ == '__main__':
     count_list = sorted(list(map(len, list(map(set, input_columns_list)))))
     assert count_list[0] == sorted(count_list)[-1], 'columns in different input tsv are missing'
 
+    max_seq_len = 0
     with open(output_text_file_path, 'w') as f:
         f.write("{}\n".format(
                 "\t".join(columns_with_positions)
@@ -103,6 +104,11 @@ if __name__ == '__main__':
                 line_content_list = []
                 for item in columns_with_positions:
 
+                    if item == 'text':
+                        text_len = len(data_info_dict[item][j].split())
+                        if text_len > max_seq_len:
+                            max_seq_len = text_len
+
                     line_content_list.append(
                         data_info_dict[item][j]
                     )
@@ -111,6 +117,8 @@ if __name__ == '__main__':
                     )
                 )
 
+    if max_seq_len > 0:
+        print("Max length from all sequences is {}".format(max_seq_len))
 
         
 
