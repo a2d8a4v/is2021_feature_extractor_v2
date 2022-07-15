@@ -132,6 +132,7 @@ if __name__ == '__main__':
         utt_text_dict = { utt_id:remove_partial_words_call(texts) for utt_id, texts in utt_text_dict.items() }
 
     if remove_stop_tokens:
+        print('It may cost some time to deal with stop words...')
         import nltk
         nltk.download('punkt')
         nltk.download('stopwords')
