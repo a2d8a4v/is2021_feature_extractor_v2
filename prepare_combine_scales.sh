@@ -11,7 +11,7 @@ stop_stage=10000
 specific_scale=None
 combine_same_speakerids=false
 remove_filled_pauses=false
-main_model_name="librispeech"
+model_name="librispeech"
 tag="20220617_prompt"
 main_corpus_data_root="/share/nas167/a2y3a1N0n2Yann/speechocean/espnet_amazon/egs/tlt-school/is2021_data-prep-all_baseline/data"
 main_test_sets="cerf_train_tr cerf_train_cv"
@@ -21,11 +21,12 @@ s2t=false
 . ./utils/parse_options.sh
 set -euo pipefail
 
+main_model_name=$model_name
 if [ ! -z ${tag} ]; then
     main_model_name=${main_model_name}_${tag}
 fi
 
-if [ $stage -le -1 ] && [ $stop_stage -ge -1 ] ; then
+if [ $stage -le 0 ] && [ $stop_stage -ge 0 ] ; then
     echo "A. Prepare train test data of main data"
     for test_set in $main_test_sets; do
         data_dir=$main_corpus_data_root/$test_set
@@ -44,7 +45,7 @@ if [ $stage -le -1 ] && [ $stop_stage -ge -1 ] ; then
     done
 fi
 
-if [ $stage -le 0 ] && [ $stop_stage -ge 0 ] ; then
+if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
     echo "B. Prepare train data"
     for test_set in cerf_train_tr; do
         main_data_dir=$main_corpus_data_root/$test_set
@@ -58,7 +59,7 @@ if [ $stage -le 0 ] && [ $stop_stage -ge 0 ] ; then
     done
 fi
 
-if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
+if [ $stage -le 2 ] && [ $stop_stage -ge 2 ] ; then
     echo "C. Prepare dev data"
     for test_set in cerf_train_cv; do
         main_data_dir=$main_corpus_data_root/$test_set
@@ -72,7 +73,7 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
     done
 fi
 
-if [ $stage -le 2 ] && [ $stop_stage -ge 2 ] ; then
+if [ $stage -le 3 ] && [ $stop_stage -ge 3 ] ; then
     echo "D. Prepare test data"
     for test_set in cerf_train_cv; do
         main_data_dir=$main_corpus_data_root/$test_set
