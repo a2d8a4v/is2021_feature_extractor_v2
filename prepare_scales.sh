@@ -59,20 +59,29 @@ if [ $stage -le 2 ] && [ $stop_stage -ge 2 ] ; then
     cefr_scores_names=""
     text_names=""
     sp2utt_names=""
+    json_names=""
     for test_set in $test_sets; do
         data_dir=$data_root/$test_set
+        dest_dir=$data_dir/$model_name
         momlang_names+="${data_root}/momlanguage "
         cefr_scores_names+="${data_dir}/scale "
         text_names+="${data_dir}/text "
         sp2utt_names+="${data_dir}/spk2utt "
+        json_names+="${dest_dir}/all.json "
     done
 
     for test_set in all; do
         data_dir=$data_root/$test_set
+        dest_dir=$data_dir/$model_name
+        mkdir -pv $dest_dir > /dev/null 2>&1
 
         cat $text_names > $data_dir/text
         cat $cefr_scores_names > $data_dir/scale
         cat $sp2utt_names > $data_dir/spk2utt
+
+        python local.apl.v3/utils/combine_jsons.py \
+            --input_jsons_file_path $json_names \
+            --output_file_path $dest_dir/all.json
 
         python local.apl.v3/utils/prepare_auto_grader_feats.py \
             --s2t $s2t \
