@@ -16,6 +16,7 @@ tag="20220617_prompt"
 data_root=data
 test_sets="cerf_train_tr cerf_train_cv"
 s2t=false
+sort_by=value
 
 . ./utils/parse_options.sh
 set -euo pipefail
@@ -34,6 +35,7 @@ if [ $stage -le 0 ] && [ $stop_stage -ge 0 ] ; then
 
         python local.apl.v3/analysis/get_words_frequencies.py \
             --s2t $s2t \
+            --sort_by $sort_by \
             --input_json_file_path $dest_dir/all.json \
             --input_text_file_path $data_dir/text \
             --input_spk2utt_file_path $data_dir/spk2utt \
@@ -75,13 +77,14 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
         cat $text_names > $data_dir/text
         cat $cefr_scores_names > $data_dir/scale
         cat $sp2utt_names > $data_dir/spk2utt
-        
+
         python local.apl.v3/utils/combine_jsons.py \
             --input_jsons_file_path $json_names \
             --output_file_path $dest_dir/all.json
 
         python local.apl.v3/analysis/get_words_frequencies.py \
             --s2t $s2t \
+            --sort_by $sort_by \
             --input_json_file_path $dest_dir/all.json \
             --input_text_file_path $data_dir/text \
             --input_spk2utt_file_path $data_dir/spk2utt \

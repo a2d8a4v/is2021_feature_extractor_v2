@@ -1,4 +1,9 @@
 import argparse
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), "local.apl.v3/utils"))) # Remember to add this line to avoid "module no exist" error
+sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), "local.apl.v3/stt")))
 
 from espnet.utils.cli_utils import strtobool
 from utilities import (
@@ -24,9 +29,7 @@ mapping_dict = {
 native_language_labels = ['X', 'italiano', 'japanese']
 
 def nullable_string(val):
-    if val.lower() == 'none':
-        return None
-    return val
+    return None if val.lower() == 'none' else val
 
 def argparse_function():
     parser = argparse.ArgumentParser()
@@ -51,6 +54,10 @@ def argparse_function():
                         default='CEFR_LABELS_PATH/trn_cefr_scores.txt',
                         type=str)
 
+    parser.add_argument("--input_spk2utt_file_path",
+                        default='data/trn/text',
+                        type=nullable_string)
+
     parser.add_argument("--s2t",
                     default=False,
                     type=strtobool)
@@ -70,6 +77,11 @@ def argparse_function():
     parser.add_argument("--combine_same_speakerids",
                     default=False,
                     type=strtobool)
+
+    parser.add_argument("--sort_by",
+                    choices=['key', 'value', 'none'],
+                    default=None,
+                    type=nullable_string)
 
     args = parser.parse_args()
 
@@ -142,11 +154,20 @@ if __name__ == '__main__':
         for token in token_list:
             if get_specific_labels is not None:
                 if get_specific_labels.lower() == utt_cefr_file_path_dict[utt_or_spk_id].lower():
-                    word_cumulation_dict.sefdefault(token, []).append(utt_or_spk_id)
+                    word_cumulation_dict.setdefault(token, []).append(utt_or_spk_id)
             else:
-                word_cumulation_dict.sefdefault(token, []).append(utt_or_spk_id)
+                word_cumulation_dict.setdefault(token, []).append(utt_or_spk_id)
+
+    # sort
+    word_cumulation_dict = { token:len(utt_or_spk_id_count_list) for token, utt_or_spk_id_count_list in word_cumulation_dict.items() }
+    if args.sort_by == 'key':
+        word_cumulation_dict = sorted(word_cumulation_dict)
+    elif args.sort_by == 'value':
+        word_cumulation_dict = dict(sorted(word_cumulation_dict.items(), reverse=True, key=lambda item: item[1]))
 
     # save
     with open(args.output_text_file_path, 'w') as f:
-        for token, utt_or_spk_id_count_list in utt_text_dict.items():
-            f.write("{} {}\n".format(token, len(utt_or_spk_id_count_list)))
+        for token, token_count in word_cumulation_dict.items():
+            f.write("{} {}\n".format(token, token_count))
+
+    print('Output path: {}'.format(args.output_text_file_path))
