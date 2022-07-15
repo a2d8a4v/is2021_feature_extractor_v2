@@ -46,6 +46,10 @@ if [ $stage -le 0 ] && [ $stop_stage -ge 0 ] ; then
             --remove_filled_pauses $remove_filled_pauses \
             --remove_stop_tokens $remove_stop_tokens \
             --combine_same_speakerids $combine_same_speakerids
+
+        python local.apl.v3/utils/draw_word_freq_chart.py \
+            --input_word_frequency_file_path $output_dir/word_frequency \
+            --output_file_path $output_dir/word_frequency.png
     done
 fi
 
@@ -96,5 +100,9 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
             --remove_filled_pauses $remove_filled_pauses \
             --remove_stop_tokens $remove_stop_tokens \
             --combine_same_speakerids $combine_same_speakerids
+
+        python local.apl.v3/utils/draw_word_freq_chart.py \
+            --input_word_frequency_file_path $output_dir/word_frequency \
+            --output_file_path $output_dir/word_frequency.png
     done
 fi
