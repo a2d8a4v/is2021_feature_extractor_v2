@@ -11,6 +11,7 @@ stop_stage=10000
 specific_scale=None
 combine_same_speakerids=false
 remove_filled_pauses=false
+remove_stop_tokens=false
 model_name="librispeech"
 tag="20220617_prompt"
 data_root=data
@@ -43,6 +44,7 @@ if [ $stage -le 0 ] && [ $stop_stage -ge 0 ] ; then
             --input_spk2momlang_file_path $data_dir/momlanguage \
             --output_text_file_path $output_dir/word_frequency \
             --remove_filled_pauses $remove_filled_pauses \
+            --remove_stop_tokens $remove_stop_tokens \
             --combine_same_speakerids $combine_same_speakerids
     done
 fi
@@ -92,6 +94,7 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
             --input_cefr_label_file_path $data_dir/scale \
             --output_text_file_path $dest_dir/word_frequency \
             --remove_filled_pauses $remove_filled_pauses \
+            --remove_stop_tokens $remove_stop_tokens \
             --combine_same_speakerids $combine_same_speakerids
     done
 fi

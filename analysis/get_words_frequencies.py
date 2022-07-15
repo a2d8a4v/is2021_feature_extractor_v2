@@ -70,6 +70,10 @@ def argparse_function():
                     default=False,
                     type=strtobool)
 
+    parser.add_argument("--remove_stop_tokens",
+                    default=False,
+                    type=strtobool)
+
     parser.add_argument("--remove_partial_words",
                     default=False,
                     type=strtobool)
@@ -107,6 +111,7 @@ if __name__ == '__main__':
     remove_partial_words = args.remove_partial_words
     input_spk2utt_file_path = args.input_spk2utt_file_path
     input_json_file_path = args.input_json_file_path
+    remove_stop_tokens = args.remove_stop_tokens
 
     if get_specific_labels is not None:
         assert get_specific_labels in mapping_dict.keys(), "get_specific_labels was given out-of-domain label!"
@@ -125,6 +130,14 @@ if __name__ == '__main__':
 
     if remove_partial_words:
         utt_text_dict = { utt_id:remove_partial_words_call(texts) for utt_id, texts in utt_text_dict.items() }
+
+    if remove_stop_tokens:
+        import nltk
+        nltk.download('punkt')
+        nltk.download('stopwords')
+        from nltk.corpus import stopwords
+        from nltk.tokenize import word_tokenize
+        utt_text_dict = { utt_id:" ".join([ word for word in word_tokenize(texts) if not word in stopwords.words() ]) for utt_id, texts in utt_text_dict.items() }
 
     if combine_same_speakerids:
         assert input_spk2utt_file_path is not None, 'You need to point a specific path for input_spk2utt_file_path'
