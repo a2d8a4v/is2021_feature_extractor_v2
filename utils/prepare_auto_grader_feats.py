@@ -11,17 +11,9 @@ from utilities import (
     remove_partial_words_call,
     remove_tltschool_interregnum_tokens
 )
-
-mapping_dict = {
-    0: 0,
-    'a1': 1,
-    'a1+': 2,
-    'a2': 3,
-    'a2+': 4,
-    'b1': 5,
-    'b1+': 6,
-    'b2': 7
-}
+from defined_scales import (
+    mapping_dict
+)
 
 def nullable_string(val):
     if val.lower() == 'none':
@@ -100,6 +92,8 @@ if __name__ == '__main__':
     # argparse
     args = argparse_function()
 
+    print(mapping_dict)
+
     # variables
     s2t = args.s2t
     combine_same_speakerids = args.combine_same_speakerids
@@ -153,7 +147,7 @@ if __name__ == '__main__':
     sst = 0
     max_seq_len = 0
     with open(args.output_text_file_path, 'w') as f:
-        f.write("{}\t{}\t{}\t{}\n".format('score', 'sst', 'l1', 'text'))
+        f.write("{}\t{}\t{}\t{}\t{}\n".format('id', 'score', 'sst', 'l1', 'text'))
         for utt_or_spk_id, text in utt_text_dict.items():
 
             if len(text.split()) > max_seq_len:
@@ -161,7 +155,8 @@ if __name__ == '__main__':
 
             if get_specific_labels is not None:
                 if get_specific_labels.lower() == utt_cefr_file_path_dict[utt_or_spk_id].lower():
-                    f.write("{}\t{}\t{}\t{}\n".format(
+                    f.write("{}\t{}\t{}\t{}\t{}\n".format(
+                            utt_or_spk_id,
                             mapping_cefr2num(
                                 utt_cefr_file_path_dict[utt_or_spk_id]
                             ),
@@ -172,7 +167,8 @@ if __name__ == '__main__':
                     )
                     count_cefr_labels+=1
             else:
-                f.write("{}\t{}\t{}\t{}\n".format(
+                f.write("{}\t{}\t{}\t{}\t{}\n".format(
+                        utt_or_spk_id,
                         mapping_cefr2num(
                             utt_cefr_file_path_dict[utt_or_spk_id]
                         ),
