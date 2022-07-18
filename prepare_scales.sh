@@ -26,7 +26,27 @@ fi
 
 if [ $stage -le 0 ] && [ $stop_stage -ge 0 ] ; then
     # filter the data we want
-    echo "A. filter the data we want"
+    echo "A. Get CEFR scale label from utterance ids, and their mother tongue"
+
+    for test_set in $test_sets; do
+        data_dir=$data_root/$test_set
+
+        python local.apl.v3/utils/get_tltschool_cefr_scales.py \
+            --input_wavscp_file_path $data_dir/wav.scp \
+            --output_cefr_file_path $data_dir/scale
+
+        if [ -f $data_dir/momlanguage ]; then
+            rm $data_dir/momlanguage
+        fi
+        touch $data_dir/.momlanguage
+        lines=$(cat $data_dir/wav.scp | wc -l)
+        for j in $(seq 1 $lines); do
+            echo 'italiano' >> $data_dir/.momlanguage
+        done
+        cat $data_dir/wav.scp | cut -f1 -d' ' > $data_dir/utt_list
+        paste -d ' ' $data_dir/utt_list $data_dir/.momlanguage > $data_dir/momlanguage
+        rm $data_dir/utt_list $data_dir/.momlanguage
+    done
 fi
 
 if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
@@ -34,7 +54,6 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
     for test_set in $test_sets; do
         data_dir=$data_root/$test_set
         dest_dir=$data_dir/$model_name
-
 
         python local.apl.v3/utils/prepare_auto_grader_feats.py \
             --s2t $s2t \
