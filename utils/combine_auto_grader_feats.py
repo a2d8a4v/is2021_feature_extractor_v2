@@ -2,18 +2,7 @@ import sys
 import csv
 import argparse
 
-mapping_dict = {
-    0: 0,
-    'a1': 1,
-    'a1+': 2,
-    'a2': 3,
-    'a2+': 4,
-    'b1': 5,
-    'b1+': 6,
-    'b2': 7
-}
-
-columns_with_positions = ['score', 'sst', 'l1', 'text']
+columns_with_positions = ['id', 'score', 'sst', 'l1', 'text']
 
 def argparse_function():
     parser = argparse.ArgumentParser()
