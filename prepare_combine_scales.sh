@@ -27,7 +27,32 @@ if [ ! -z ${tag} ]; then
 fi
 
 if [ $stage -le 0 ] && [ $stop_stage -ge 0 ] ; then
-    echo "A. Prepare train test data of main data"
+    # filter the data we want
+    echo "A. Get CEFR scale label from utterance ids, and their mother tongue"
+
+    for test_set in $main_test_sets; do
+        data_dir=$main_corpus_data_root/$test_set
+
+        python local.apl.v3/utils/get_tltschool_cefr_scales.py \
+            --input_wavscp_file_path $data_dir/wav.scp \
+            --output_cefr_file_path $data_dir/scale
+
+        if [ -f $data_dir/momlanguage ]; then
+            rm $data_dir/momlanguage
+        fi
+        touch $data_dir/.momlanguage
+        lines=$(cat $data_dir/wav.scp | wc -l)
+        for j in $(seq 1 $lines); do
+            echo 'italiano' >> $data_dir/.momlanguage
+        done
+        cat $data_dir/wav.scp | cut -f1 -d' ' > $data_dir/utt_list
+        paste -d ' ' $data_dir/utt_list $data_dir/.momlanguage > $data_dir/momlanguage
+        rm $data_dir/utt_list $data_dir/.momlanguage
+    done
+fi
+
+if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
+    echo "B. Prepare train test data of main data"
     for test_set in $main_test_sets; do
         data_dir=$main_corpus_data_root/$test_set
         dest_dir=$data_dir/$main_model_name
@@ -45,8 +70,8 @@ if [ $stage -le 0 ] && [ $stop_stage -ge 0 ] ; then
     done
 fi
 
-if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
-    echo "B. Prepare train data"
+if [ $stage -le 2 ] && [ $stop_stage -ge 2 ] ; then
+    echo "C. Prepare train data"
     for test_set in cerf_train_tr; do
         main_data_dir=$main_corpus_data_root/$test_set
         other_data_dir=$other_corpus_data_root/trn
@@ -59,8 +84,8 @@ if [ $stage -le 1 ] && [ $stop_stage -ge 1 ] ; then
     done
 fi
 
-if [ $stage -le 2 ] && [ $stop_stage -ge 2 ] ; then
-    echo "C. Prepare dev data"
+if [ $stage -le 3 ] && [ $stop_stage -ge 3 ] ; then
+    echo "D. Prepare dev data"
     for test_set in cerf_train_cv; do
         main_data_dir=$main_corpus_data_root/$test_set
         other_data_dir=$other_corpus_data_root/dev
@@ -73,8 +98,8 @@ if [ $stage -le 2 ] && [ $stop_stage -ge 2 ] ; then
     done
 fi
 
-if [ $stage -le 3 ] && [ $stop_stage -ge 3 ] ; then
-    echo "D. Prepare test data"
+if [ $stage -le 4 ] && [ $stop_stage -ge 4 ] ; then
+    echo "E. Prepare test data"
     for test_set in cerf_train_cv; do
         main_data_dir=$main_corpus_data_root/$test_set
         other_data_dir=$other_corpus_data_root/eval
