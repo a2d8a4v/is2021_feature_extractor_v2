@@ -3,9 +3,12 @@
 # @https://realpython.com/numpy-scipy-pandas-correlation-python/
 # @https://stackoverflow.com/questions/893657/how-do-i-calculate-r-squared-using-python-and-numpy
 
+import os
 import sys
 import argparse
 import warnings
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), "local.apl.v3/utils"))) # Remember to add this line to avoid "module no exist" error
 
 from tqdm import tqdm
 from espnet.utils.cli_utils import strtobool
@@ -16,17 +19,9 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 # import statsmodels.api as sml
 # import matplotlib.pyplot as plt
-
-mapping_dict = {
-    0: 0,
-    'A1': 1,
-    'A1+': 2,
-    'A2': 3,
-    'A2+': 4,
-    'B1': 5,
-    'B1+': 6,
-    'B2': 7
-}
+from defined_scales import (
+    mapping_dict
+)
 
 analysis_types_list = ['rmse', 'rsquared', 'accuracy']
 accuracy_within = [0.5, 1]

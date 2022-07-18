@@ -14,19 +14,11 @@ from utilities import (
     remove_partial_words_call,
     remove_tltschool_interregnum_tokens
 )
+from defined_scales import (
+    mapping_dict
+)
 
-mapping_dict = {
-    0: 0,
-    'a1': 1,
-    'a1+': 2,
-    'a2': 3,
-    'a2+': 4,
-    'b1': 5,
-    'b1+': 6,
-    'b2': 7
-}
-
-native_language_labels = ['X', 'italiano', 'japanese']
+native_language_labels = ['X', 'italiano', 'japanese', 'american']
 
 def nullable_string(val):
     return None if val.lower() == 'none' else val
