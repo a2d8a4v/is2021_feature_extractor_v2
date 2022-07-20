@@ -75,7 +75,7 @@ if [ $stage -le 2 ] && [ $stop_stage -ge 2 ] ; then
     for test_set in cerf_train_tr; do
         main_data_dir=$main_corpus_data_root/$test_set
         other_data_dir=$other_corpus_data_root/trn
-        dest_data_dir=$main_corpus_data_root/train_combo
+        dest_data_dir=$main_corpus_data_root/trn_combo
         mkdir -pv $dest_data_dir > /dev/null 2>&1
 
         python local.apl.v3/utils/combine_auto_grader_feats.py \
